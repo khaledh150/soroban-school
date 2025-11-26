@@ -12,7 +12,7 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-// ---------- CHAPTER 30 (Specific Logic for A+B-C=9 and A-9+C) ----------
+// ---------- CHAPTER 30 (Specific Logic for A=1-4 and A=10-18) ----------
 
 function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
 
@@ -54,17 +54,45 @@ function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
 
       
 
-      // Rule: A = {1,2,3,4,6,7,8,9} (5 is excluded)
+      // Rule: A = {1, 2, 3, 4}
 
-      const aOptions = [1, 2, 3, 4, 6, 7, 8, 9];
+      A = Math.floor(Math.random() * 4) + 1;
 
-      A = aOptions[Math.floor(Math.random() * aOptions.length)];
-
-
+      
 
       // Rule: Op2 is '-'
 
       op2 = "-";
+
+
+
+      // Rule: B = {x | 10-A <= x, x != 4-A, x != 14-A}
+
+      // Since B must be 1-9:
+
+      // x >= 10-A implies range [10-A, 9]
+
+      // 14-A is always >= 10 (since A<=4), so it doesn't affect B (<=9).
+
+      // 4-A is always < 10-A, so it doesn't affect B.
+
+      // So effectively B is [10-A ... 9]
+
+      const minB = 10 - A;
+
+      const bOptions: number[] = [];
+
+      for (let x = minB; x <= 9; x++) {
+
+        bOptions.push(x);
+
+      }
+
+      
+
+      if (bOptions.length === 0) continue;
+
+      B = bOptions[Math.floor(Math.random() * bOptions.length)];
 
 
 
@@ -73,38 +101,6 @@ function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
       C = 9;
 
 
-
-      // Rule: B = {x | 10-A <= x, x != 4-A, x != 14-A}
-
-      // B must also be 1-9
-
-      const minB = Math.max(1, 10 - A);
-
-      const possibleBs: number[] = [];
-
-      
-
-      for (let x = minB; x <= 9; x++) {
-
-        const val1 = 4 - A;  // Exclusion 1
-
-        const val2 = 14 - A; // Exclusion 2
-
-        if (x !== val1 && x !== val2) {
-
-          possibleBs.push(x);
-
-        }
-
-      }
-
-
-
-      if (possibleBs.length === 0) continue;
-
-      B = possibleBs[Math.floor(Math.random() * possibleBs.length)];
-
-      
 
       D = A + B - C;
 
@@ -116,25 +112,39 @@ function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
 
       op1 = "-";
 
-      op2 = "+"; // Rule: Op2 must be '+'
+
+
+      // Decide Sub-case based on A
+
+      // Subcase 2a: A = {10,11,12,13,15,16,17,18}
+
+      // Subcase 2b: A = {9}
+
+      
+
+      const isCase9 = Math.random() < 0.2; // 20% chance for A=9
 
 
 
-      // Decide sub-case: A=9 vs A={10...18}
+      if (isCase9) {
 
-      const isSpecialNine = Math.random() < 0.15; // Small chance for A=9
-
-
-
-      if (isSpecialNine) {
-
-        // Rule: A = {9}
+        // Rule: A = 9
 
         A = 9;
 
+        
+
         // Rule: B = A - 9 => 0
 
-        B = 0; 
+        B = A - 9; // 0
+
+        
+
+        // Rule: Op2 is '+'
+
+        op2 = "+";
+
+        
 
         // Rule: C = 1
 
@@ -144,9 +154,11 @@ function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
 
         D = A - B + C;
 
+
+
       } else {
 
-        // Rule: A = {10,11,12,13,15,16,17,18} (14 excluded)
+        // Rule: A = {10, 11, 12, 13, 15, 16, 17, 18}
 
         const aOptions = [10, 11, 12, 13, 15, 16, 17, 18];
 
@@ -160,55 +172,51 @@ function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
 
         
 
-        const step1 = A - B; // Will be 1,2,3,4, 6,7,8,9
+        // Rule: Op2 is '+'
+
+        op2 = "+";
 
 
 
-        // Rule: C = 1-9, with exclusions based on step1 (A-B)
+        const step1 = A - B; // 1 to 9 (excluding 5 because A!=14)
 
-        const possibleCs: number[] = [];
+
+
+        // Rule: C filters based on step1
+
+        // Base options: 1 to 9
+
+        let cOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
         
-
-        // Logic: 
-
-        // if step1=6 then C != {6,7,8}
-
-        // if step1=7 then C != {6,7}
-
-        // if step1=8 then C != {6}
-
-        const exclusions = new Set<number>();
 
         if (step1 === 6) {
 
-          exclusions.add(6); exclusions.add(7); exclusions.add(8);
+          // if (A-B)=6 then C != {6,7,8}
+
+          cOptions = cOptions.filter(n => ![6, 7, 8].includes(n));
 
         } else if (step1 === 7) {
 
-          exclusions.add(6); exclusions.add(7);
+          // if (A-B)=7 then C != {6,7}
+
+          cOptions = cOptions.filter(n => ![6, 7].includes(n));
 
         } else if (step1 === 8) {
 
-          exclusions.add(6);
+          // if (A-B)=8 then C != {6}
+
+          cOptions = cOptions.filter(n => ![6].includes(n));
 
         }
-
-
-
-        for (let x = 1; x <= 9; x++) {
-
-          if (!exclusions.has(x)) possibleCs.push(x);
-
-        }
-
-
-
-        if (possibleCs.length === 0) continue;
-
-        C = possibleCs[Math.floor(Math.random() * possibleCs.length)];
 
         
+
+        if (cOptions.length === 0) continue;
+
+        C = cOptions[Math.floor(Math.random() * cOptions.length)];
+
+
 
         D = step1 + C;
 
@@ -220,7 +228,11 @@ function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
 
     // Final Validation
 
-    // We allow B=0 strictly for the A=9 case override
+    // Constraints: A=1-50, D=0-50
+
+    // Global rule: B,C,x always 1-9.
+
+    // EXCEPTION: In the A=9 case, B=0 (as per "B=A-9" rule).
 
     const isValidB = (A === 9 && op1 === "-" && B === 0) ? true : (B >= 1 && B <= 9);
 

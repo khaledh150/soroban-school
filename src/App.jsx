@@ -37,29 +37,38 @@ function Protected({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
 
-      <Route
-        path="/"
-        element={
-          <Protected>
-            <HomePage />
-          </Protected>
-        }
-      />
+        <Route
+          path="/"
+          element={
+            <Protected>
+              <HomePage />
+            </Protected>
+          }
+        />
 
-      <Route
-        path="/quiz"
-        element={
-          <Protected>
-            <QuizPage />
-          </Protected>
-        }
-      />
+        <Route
+          path="/quiz"
+          element={
+            <Protected>
+              <QuizPage />
+            </Protected>
+          }
+        />
 
-      {/* Redirect unknown pages to Login/Home instead of 404 */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Redirect unknown pages to Login/Home instead of 404 */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Footer Section Added Here */}
+      <footer className="w-full py-6 mt-12 text-center border-t border-gray-800">
+        <p className="text-sm text-gray-400">
+          © {new Date().getFullYear()} <span className="font-semibold text-gray-200">Wonder Kids Company Limited</span>. All rights reserved.
+        </p>
+      </footer>
+    </>
   );
 }
