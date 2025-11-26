@@ -10,11 +10,11 @@ export const translations = {
     settings: "Settings",
     backHome: "Home",
     chapter: "Chapter",
-    level: "Level",
+    level: "Book", // Changed from Level
     questions: "Questions",
     speed: "Speed",
     flash: "Flash Tokens",
-    dictation: "Voice", // Changed from Dictation Mode
+    dictation: "Voice", 
     timer: "Timer (min)",
     mute: "Mute",
     save: "Save",
@@ -52,11 +52,11 @@ export const translations = {
     settings: "ตั้งค่า",
     backHome: "หน้าหลัก",
     chapter: "บทที่",
-    level: "ระดับ",
+    level: "เล่ม", // Changed from ระดับ
     questions: "จำนวนข้อ",
     speed: "ความเร็ว (วิ)",
     flash: "แฟลชตัวเลข",
-    dictation: "เสียงอ่าน", // Changed from โหมดอ่านโจทย์
+    dictation: "เสียงอ่าน",
     timer: "เวลา (นาที)",
     mute: "ปิดเสียง",
     save: "บันทึก",
@@ -92,11 +92,23 @@ export const translations = {
 
 export const chapterTitlesTH = {
   1: [
-    "ปัดขึ้นลง (Lower Upper)", "ผสม ปัดขึ้นลง", "คู่หู 5 (+)", "คู่หู 5 (-)",
-    "ผสม คู่หู 5 (+/-)", "คู่หู 10 (+)", "คู่หู 10 (-)", "ผสม คู่หู 10 (+/-)",
-    "คู่หู 5 & 10 (+9)", "คู่หู 5 & 10 (+8)", "คู่หู 5 & 10 (+7)", "คู่หู 5 & 10 (+6)",
-    "คู่หู 5 & 10 (-9)", "คู่หู 5 & 10 (-8)", "คู่หู 5 & 10 (-7)", "คู่หู 5 & 10 (-6)",
-    "การบวกลบอย่างง่าย", "บวกลบ 2 หลัก", "บวกลบ 3 หลัก", "บวกลบ 4 หลัก"
+    "ปัดเม็ดล่าง (Lower)",
+    "ปัดเม็ดล่าง 2 หลัก (Lower 2 digit)",
+    "ปัดเม็ดบน (Upper)",
+    "ผสม ปัดเม็ดบนล่าง (Mix Lower Upper)",
+    "ผสม ปัดเม็ดบนล่าง 2 หลัก (Mix Lower Upper 2 digit)",
+    "คู่หู 5 (+4)",
+    "คู่หู 5 (+3)",
+    "คู่หู 5 (+2)",
+    "คู่หู 5 (+1)",
+    "คู่หู 5 (บวก)",
+    "คู่หู 5 (-4)",
+    "คู่หู 5 (-3)",
+    "คู่หู 5 (-2)",
+    "คู่หู 5 (-1)",
+    "คู่หู 5 (ลบ)",
+    "ผสม คู่หู 5 (Mix Five buddy)",
+    "ผสม คู่หู 5 2 หลัก (Mix Five buddy 2 digit)"
   ]
 };
 
