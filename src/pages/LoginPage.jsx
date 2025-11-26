@@ -52,11 +52,11 @@ export default function LoginPage() {
 
       {/* --- MASSIVE LOGO (With Negative Margin to pull card up) --- */}
       {/* -mb-12 pulls the card up by 3rem (48px) to remove the gap */}
-      <div className="relative z-10 -mb-12 md:-mb-16 animate-scale-in flex-shrink-0">
+      <div className="relative z-10 -mb-12 md:-mb-16 animate-scale-in shrink-0">
         <img 
           src={logoImg} 
           alt="Wonder Kids Logo" 
-          className="w-84 h-84 md:w-[350px] md:h-[350px] object-contain drop-shadow-2xl"
+          className="w-74 h-74 md:w-[250px] md:h-[250px] object-contain drop-shadow-2xl"
         />
       </div>
 
