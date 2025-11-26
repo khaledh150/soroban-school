@@ -3,15 +3,17 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import "./soroban.css";
 
+// --- IMPORT SOUNDS ---
+import s1 from "../../assets/sounds/sound1.wav";
+import s2 from "../../assets/sounds/sound2.wav";
+
 const SorobanBoard = forwardRef((props, ref) => {
   const boardRef = useRef(null);
   const wrapperRef = useRef(null);
   
-  // These refs hold our internal functions so we can expose them
   const internalClearRef = useRef(null);
   const internalShakeRef = useRef(null);
 
-  // Expose the "reset" function to the parent (QuizPage)
   useImperativeHandle(ref, () => ({
     reset: () => {
       if (internalClearRef.current) internalClearRef.current();
@@ -25,21 +27,17 @@ const SorobanBoard = forwardRef((props, ref) => {
     if (!board || !wrapper) return;
 
     // --- SETUP ---
-    board.innerHTML = ""; // Clean start
+    board.innerHTML = ""; 
 
     const DEAD_ZONE = 2;
     const SHAKE_G = 20; 
     const HAPTIC_MS = 12;
 
-    // Sounds
-    const soundOn = new Audio("https://soroban-wonder-kids.b-cdn.net/sounds/sound1.wav");
-    const soundOff = new Audio("https://soroban-wonder-kids.b-cdn.net/sounds/sound2.wav");
+    // --- USE IMPORTED SOUNDS ---
+    const soundOn = new Audio(s1);
+    const soundOff = new Audio(s2);
 
-    // Mute Check
-    const isMuted = () => {
-      const el = document.getElementById("muteSound");
-      return el && el.checked;
-    };
+    const isMuted = () => false; 
 
     function playOn() {
       if (isMuted()) return;
@@ -111,7 +109,6 @@ const SorobanBoard = forwardRef((props, ref) => {
       setTimeout(() => wrapper.classList.remove("shake"), 220);
     }
 
-    // Assign to refs for useImperativeHandle
     internalClearRef.current = clearBoard;
     internalShakeRef.current = shakeEffect;
 
@@ -161,12 +158,10 @@ const SorobanBoard = forwardRef((props, ref) => {
       window.addEventListener("devicemotion", motionHandler);
     }
 
-    // --- CLEANUP ---
     return () => {
       if (window.DeviceMotionEvent) window.removeEventListener("devicemotion", motionHandler);
-      
       const allBeads = board.querySelectorAll(".bead");
-      allBeads.forEach((b) => b.replaceWith(b.cloneNode(true))); // Remove listeners
+      allBeads.forEach((b) => b.replaceWith(b.cloneNode(true))); 
       board.innerHTML = "";
     };
   }, []);

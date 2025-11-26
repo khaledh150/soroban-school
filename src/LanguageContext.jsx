@@ -1,0 +1,121 @@
+// src/LanguageContext.jsx
+import React, { createContext, useState, useContext } from 'react';
+
+const LanguageContext = createContext();
+
+export const translations = {
+  en: {
+    appTitle: "Soroban For School",
+    startQuiz: "Start Quiz",
+    settings: "Settings",
+    backHome: "Home",
+    chapter: "Chapter",
+    level: "Level",
+    questions: "Questions",
+    speed: "Speed",
+    flash: "Flash Tokens",
+    dictation: "Voice", // Changed from Dictation Mode
+    timer: "Timer (min)",
+    mute: "Mute",
+    save: "Save",
+    cancel: "Cancel",
+    results: "Results",
+    perfect: "Perfect! 🎉",
+    timesUp: "Time's Up!",
+    score: "You scored",
+    tryAgain: "Try Again",
+    send: "Send",
+    loading: "Loading...",
+    loginTitle: "Sign In",
+    username: "Username",
+    password: "Password",
+    signingIn: "Signing in...",
+    errorFill: "Fill all fields",
+    logout: "Log Out",
+    voiceVol: "Voice Volume",
+    sfxVol: "SFX Volume",
+    watchLesson: "Watch Lesson",
+    slideshow: "Gallery",
+    videoError: "Video not available",
+    exercise: "Exercise",
+    next: "Next",
+    nickname: "Nickname",
+    saveNickname: "Save nickname",
+    fontSize: "Font Size",
+    equals: "Equals",
+    plus: "Plus",
+    minus: "Minus"
+  },
+  th: {
+    appTitle: "Soroban For School",
+    startQuiz: "เริ่มทำแบบทดสอบ",
+    settings: "ตั้งค่า",
+    backHome: "หน้าหลัก",
+    chapter: "บทที่",
+    level: "ระดับ",
+    questions: "จำนวนข้อ",
+    speed: "ความเร็ว (วิ)",
+    flash: "แฟลชตัวเลข",
+    dictation: "เสียงอ่าน", // Changed from โหมดอ่านโจทย์
+    timer: "เวลา (นาที)",
+    mute: "ปิดเสียง",
+    save: "บันทึก",
+    cancel: "ยกเลิก",
+    results: "ผลลัพธ์",
+    perfect: "ยอดเยี่ยม! 🎉",
+    timesUp: "หมดเวลา!",
+    score: "คะแนนของคุณ",
+    tryAgain: "ลองอีกครั้ง",
+    send: "ส่งคำตอบ",
+    loading: "กำลังโหลด...",
+    loginTitle: "เข้าสู่ระบบ",
+    username: "ชื่อผู้ใช้",
+    password: "รหัสผ่าน",
+    signingIn: "กำลังเข้าสู่ระบบ...",
+    errorFill: "กรุณากรอกข้อมูลให้ครบ",
+    logout: "ออกจากระบบ",
+    voiceVol: "ความเสียงอ่าน",
+    sfxVol: "เสียงเอฟเฟกต์",
+    watchLesson: "ดูบทเรียน",
+    slideshow: "อัลบั้มภาพ",
+    videoError: "ไม่พบวิดีโอ",
+    exercise: "แบบฝึกหัด",
+    next: "ถัดไป",
+    nickname: "ชื่อเล่น",
+    saveNickname: "บันทึกชื่อเล่น",
+    fontSize: "ขนาดตัวอักษร",
+    equals: "เท่ากับ",
+    plus: "บวก",
+    minus: "ลบ"
+  }
+};
+
+export const chapterTitlesTH = {
+  1: [
+    "ปัดขึ้นลง (Lower Upper)", "ผสม ปัดขึ้นลง", "คู่หู 5 (+)", "คู่หู 5 (-)",
+    "ผสม คู่หู 5 (+/-)", "คู่หู 10 (+)", "คู่หู 10 (-)", "ผสม คู่หู 10 (+/-)",
+    "คู่หู 5 & 10 (+9)", "คู่หู 5 & 10 (+8)", "คู่หู 5 & 10 (+7)", "คู่หู 5 & 10 (+6)",
+    "คู่หู 5 & 10 (-9)", "คู่หู 5 & 10 (-8)", "คู่หู 5 & 10 (-7)", "คู่หู 5 & 10 (-6)",
+    "การบวกลบอย่างง่าย", "บวกลบ 2 หลัก", "บวกลบ 3 หลัก", "บวกลบ 4 หลัก"
+  ]
+};
+
+export function LanguageProvider({ children }) {
+  const [lang, setLang] = useState('en');
+
+  const toggleLang = () => {
+    setLang((prev) => (prev === 'en' ? 'th' : 'en'));
+  };
+
+  const t = translations[lang];
+
+  return (
+    <LanguageContext.Provider value={{ lang, toggleLang, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  return useContext(LanguageContext);
+}

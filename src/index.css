@@ -1,4 +1,19 @@
 @import "tailwindcss";
+
+/* --- CRITICAL RESET --- */
+/* Ensure the app takes full height/width */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Optional: Set base font if not picked up by Tailwind */
+body {
+  font-family: 'Nunito', sans-serif;
+}
+
 /* ----- MOBILE STYLE SCROLLBARS ----- */
 ::-webkit-scrollbar {
   width: 6px;

@@ -1,9 +1,10 @@
 // src/api/questionApi.js
 
-const SUPABASE_URL = "https://avuqbouaiwfdpnbzqwgu.supabase.co"; // your URL
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ""; 
-// OR hardcode it if you want (not recommended for public repo):
-// const SUPABASE_ANON_KEY = "paste-your-supabase-anon-key-here";
+// Use the environment variable for the URL (or fallback to the string if env is missing)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://kbozsagzrrxssooacupw.supabase.co";
+
+// Use the environment variable for the KEY
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 export async function generateQuestions({ chapter, numQuestions = 20, numNumbers = 4 }) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/quiz-generator`, {

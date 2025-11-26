@@ -1,10 +1,11 @@
+// src/App.jsx
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import LoginPage from './pages/LoginPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
-import NotFoundPage from './pages/NotFoundPage.jsx';
+// DELETED: import NotFoundPage ...
 
 function Protected({ children }) {
   const [session, setSession] = useState(null);
@@ -57,7 +58,8 @@ export default function App() {
         }
       />
 
-      <Route path="*" element={<NotFoundPage />} />
+      {/* Redirect unknown pages to Login/Home instead of 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
