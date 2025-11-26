@@ -56,7 +56,7 @@ export default function LoginPage() {
         <img 
           src={logoImg} 
           alt="Wonder Kids Logo" 
-          className="w-74 h-74 md:w-[270px] md:h-[270px] object-contain drop-shadow-2xl"
+          className="w-74 h-74 md:w-[300px] md:h-[300px] object-contain drop-shadow-2xl"
         />
       </div>
 
