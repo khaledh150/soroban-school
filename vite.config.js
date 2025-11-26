@@ -9,15 +9,18 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // These assets must exist in your 'public' folder for PWA to work!
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Soroban School',
-        short_name: 'Soroban',
-        description: 'Master Mental Math & Soroban',
-        theme_color: '#d8e9fa',
-        background_color: '#d8e9fa',
+        name: 'Soroban for School',
+        short_name: 'Soroban School',
+        description: 'Master mental math with Soroban for School. A fun, gamified abacus training platform.',
+        theme_color: '#111827', // Matched to your dark theme background
+        background_color: '#111827',
         display: 'standalone',
         orientation: 'landscape',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
