@@ -12,254 +12,64 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-// ---------- CHAPTER 30 (Specific Logic for A=1-4 and A=10-18) ----------
-
+// ---------- Book 1 Chapter 1 Lower ----------
 function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
+  const out: Question[] = [];
 
-  const questions: Question[] = [];
+  function r14() {
+    return Math.floor(Math.random() * 4) + 1;
+  }
+  
+  function rOp() {
+    return Math.random() < 0.5 ? "+" : "-";
+  }
 
   let attempts = 0;
 
-
-
-  while (questions.length < numQuestions && attempts < 5000) {
-
+  while (out.length < numQuestions && attempts < 5000) {
     attempts++;
 
-    let A = 0;
-
-    let B = 0;
-
-    let C = 0;
-
-    let op1 = "+";
-
-    let op2 = "+";
-
-    let D = 0;
-
-
-
-    // Decide Op1: '+' or '-'
-
-    const op1Type = Math.random() < 0.5 ? "+" : "-";
-
-
-
-    if (op1Type === "+") {
-
-      // --- Case 1: Op1 is '+' ---
-
-      op1 = "+";
-
-      
-
-      // Rule: A = {1, 2, 3, 4}
-
-      A = Math.floor(Math.random() * 4) + 1;
-
-      
-
-      // Rule: Op2 is '-'
-
-      op2 = "-";
-
-
-
-      // Rule: B = {x | 10-A <= x, x != 4-A, x != 14-A}
-
-      // Since B must be 1-9:
-
-      // x >= 10-A implies range [10-A, 9]
-
-      // 14-A is always >= 10 (since A<=4), so it doesn't affect B (<=9).
-
-      // 4-A is always < 10-A, so it doesn't affect B.
-
-      // So effectively B is [10-A ... 9]
-
-      const minB = 10 - A;
-
-      const bOptions: number[] = [];
-
-      for (let x = minB; x <= 9; x++) {
-
-        bOptions.push(x);
-
-      }
-
-      
-
-      if (bOptions.length === 0) continue;
-
-      B = bOptions[Math.floor(Math.random() * bOptions.length)];
-
-
-
-      // Rule: C = 9
-
-      C = 9;
-
-
-
-      D = A + B - C;
-
-
-
-    } else {
-
-      // --- Case 2: Op1 is '-' ---
-
-      op1 = "-";
-
-
-
-      // Decide Sub-case based on A
-
-      // Subcase 2a: A = {10,11,12,13,15,16,17,18}
-
-      // Subcase 2b: A = {9}
-
-      
-
-      const isCase9 = Math.random() < 0.2; // 20% chance for A=9
-
-
-
-      if (isCase9) {
-
-        // Rule: A = 9
-
-        A = 9;
-
-        
-
-        // Rule: B = A - 9 => 0
-
-        B = A - 9; // 0
-
-        
-
-        // Rule: Op2 is '+'
-
-        op2 = "+";
-
-        
-
-        // Rule: C = 1
-
-        C = 1;
-
-        
-
-        D = A - B + C;
-
-
-
+    // 1. Generate A (1,2,3,4)
+    const A = r14();
+    const op1 = rOp();
+
+    // 2. Generate B based on Op1 rules
+    let validBs: number[] = [];
+    for (let b = 1; b <= 4; b++) {
+      if (op1 === "+") {
+        if (b < 5 - A) validBs.push(b);
       } else {
-
-        // Rule: A = {10, 11, 12, 13, 15, 16, 17, 18}
-
-        const aOptions = [10, 11, 12, 13, 15, 16, 17, 18];
-
-        A = aOptions[Math.floor(Math.random() * aOptions.length)];
-
-        
-
-        // Rule: B = 9
-
-        B = 9;
-
-        
-
-        // Rule: Op2 is '+'
-
-        op2 = "+";
-
-
-
-        const step1 = A - B; // 1 to 9 (excluding 5 because A!=14)
-
-
-
-        // Rule: C filters based on step1
-
-        // Base options: 1 to 9
-
-        let cOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-        
-
-        if (step1 === 6) {
-
-          // if (A-B)=6 then C != {6,7,8}
-
-          cOptions = cOptions.filter(n => ![6, 7, 8].includes(n));
-
-        } else if (step1 === 7) {
-
-          // if (A-B)=7 then C != {6,7}
-
-          cOptions = cOptions.filter(n => ![6, 7].includes(n));
-
-        } else if (step1 === 8) {
-
-          // if (A-B)=8 then C != {6}
-
-          cOptions = cOptions.filter(n => ![6].includes(n));
-
-        }
-
-        
-
-        if (cOptions.length === 0) continue;
-
-        C = cOptions[Math.floor(Math.random() * cOptions.length)];
-
-
-
-        D = step1 + C;
-
+        if (b <= A) validBs.push(b);
       }
-
     }
 
+    if (validBs.length === 0) continue;
+    
+    const B = validBs[Math.floor(Math.random() * validBs.length)];
+    const stage1 = op1 === "+" ? A + B : A - B;
 
-
-    // Final Validation
-
-    // Constraints: A=1-50, D=0-50
-
-    // Global rule: B,C,x always 1-9.
-
-    // EXCEPTION: In the A=9 case, B=0 (as per "B=A-9" rule).
-
-    const isValidB = (A === 9 && op1 === "-" && B === 0) ? true : (B >= 1 && B <= 9);
-
-
-
-    if (
-
-      A >= 1 && A <= 50 &&
-
-      isValidB &&
-
-      C >= 1 && C <= 9 &&
-
-      D >= 0 && D <= 50
-
-    ) {
-
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
-
+    // 3. Generate C based on Op2 rules
+    const op2 = rOp();
+    let validCs: number[] = [];
+    for (let c = 1; c <= 4; c++) {
+      if (op2 === "+") {
+        if (c < 5 - stage1) validCs.push(c);
+      } else {
+        if (c <= stage1) validCs.push(c);
+      }
     }
 
+    if (validCs.length === 0) continue;
+
+    const C = validCs[Math.floor(Math.random() * validCs.length)];
+    const D = op2 === "+" ? stage1 + C : stage1 - C;
+
+    if (D >= 0 && D <= 4) {
+      out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    }
   }
 
-
-
-  return questions;
-
+  return out;
 }
 
 // ---------- Book 1 Chapter 2 Lower 2-Digits ----------

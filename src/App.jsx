@@ -63,8 +63,8 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* Footer Section Added Here */}
-      <footer className="w-full py-6 mt-12 text-center border-t border-gray-800">
+      {/* Footer Section Added Here - Now explicitly transparent */}
+      <footer className="w-full py-6 mt-12 text-center border-t border-gray-800 bg-transparent">
         <p className="text-sm text-gray-400">
           © {new Date().getFullYear()} <span className="font-semibold text-gray-200">Wonder Kids Company Limited</span>. All rights reserved.
         </p>
