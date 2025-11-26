@@ -281,7 +281,7 @@ function HomePage() {
   function renderTop() {
     if (!showingChapter || !levels.length) {
       // Nickname removed, generic welcome
-      const namePart = "Welcome to Wonder Kids!";
+      const namePart = "Welcome to Soroban for School!";
       const subtitle = "Choose your Soroban book below, or enjoy the slideshow while you decide.";
 
       return (

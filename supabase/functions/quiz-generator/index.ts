@@ -12,137 +12,242 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-// ---------- CHAPTER 30 (Specific Logic for A=1-9 and A=10-18) ----------
+// ---------- CHAPTER 30 (Specific Logic for A+B-C=9 and A-9+C) ----------
+
 function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
+
   const questions: Question[] = [];
+
   let attempts = 0;
 
+
+
   while (questions.length < numQuestions && attempts < 5000) {
+
     attempts++;
+
     let A = 0;
+
     let B = 0;
+
     let C = 0;
+
     let op1 = "+";
+
     let op2 = "+";
+
     let D = 0;
 
+
+
     // Decide Op1: '+' or '-'
+
     const op1Type = Math.random() < 0.5 ? "+" : "-";
 
-    if (op1Type === "+") {
-      // --- Case 1: First Op is '+' ---
-      op1 = "+";
-      
-      // Rule: A = {1, 2, 3, 4, 5, 6, 7, 8, 9}
-      A = Math.floor(Math.random() * 9) + 1;
 
-      // Rule: Op2 must be '-'
+
+    if (op1Type === "+") {
+
+      // --- Case 1: Op1 is '+' ---
+
+      op1 = "+";
+
+      
+
+      // Rule: A = {1,2,3,4,6,7,8,9} (5 is excluded)
+
+      const aOptions = [1, 2, 3, 4, 6, 7, 8, 9];
+
+      A = aOptions[Math.floor(Math.random() * aOptions.length)];
+
+
+
+      // Rule: Op2 is '-'
+
       op2 = "-";
 
-      // Rule: B must be {x | 10-A <= x ... and x != 14-A}
-      // B is globally 1-9.
-      const minB = 10 - A;
-      // Note: "x != 4-A" is mathematically redundant since 10-A > 4-A, but we check anyway.
-      const exclude1 = 4 - A;
-      const exclude2 = 14 - A;
 
-      const validBs: number[] = [];
-      for (let x = 1; x <= 9; x++) {
-        if (x >= minB && x !== exclude1 && x !== exclude2) {
-          validBs.push(x);
-        }
-      }
 
-      if (validBs.length === 0) continue;
-      B = validBs[Math.floor(Math.random() * validBs.length)];
+      // Rule: C = 9
 
-      // Rule: C must be 9
       C = 9;
 
-      // Calculate D
+
+
+      // Rule: B = {x | 10-A <= x, x != 4-A, x != 14-A}
+
+      // B must also be 1-9
+
+      const minB = Math.max(1, 10 - A);
+
+      const possibleBs: number[] = [];
+
+      
+
+      for (let x = minB; x <= 9; x++) {
+
+        const val1 = 4 - A;  // Exclusion 1
+
+        const val2 = 14 - A; // Exclusion 2
+
+        if (x !== val1 && x !== val2) {
+
+          possibleBs.push(x);
+
+        }
+
+      }
+
+
+
+      if (possibleBs.length === 0) continue;
+
+      B = possibleBs[Math.floor(Math.random() * possibleBs.length)];
+
+      
+
       D = A + B - C;
 
-    } else {
-      // --- Case 2: First Op is '-' ---
-      op1 = "-";
-      
-      // Decide Subtype: A=9 vs A={10...18}
-      // Adjust probability based on set size? Or 50/50? Let's roughly balance valid sets.
-      // Set 1: {9}
-      // Set 2: {10,11,12,13,15,16,17,18} (Size 8)
-      // We'll pick randomly from the combined valid options to vary A evenly.
-      const validAs = [9, 10, 11, 12, 13, 15, 16, 17, 18];
-      A = validAs[Math.floor(Math.random() * validAs.length)];
 
-      if (A === 9) {
-        // Rule: If A=9 then B=A-9
-        B = A - 9; // B=0 (Specific override to global 1-9 rule)
-        
-        // Rule: Op2 must be '+'
-        op2 = "+";
-        
-        // Rule: C=1
+
+    } else {
+
+      // --- Case 2: Op1 is '-' ---
+
+      op1 = "-";
+
+      op2 = "+"; // Rule: Op2 must be '+'
+
+
+
+      // Decide sub-case: A=9 vs A={10...18}
+
+      const isSpecialNine = Math.random() < 0.15; // Small chance for A=9
+
+
+
+      if (isSpecialNine) {
+
+        // Rule: A = {9}
+
+        A = 9;
+
+        // Rule: B = A - 9 => 0
+
+        B = 0; 
+
+        // Rule: C = 1
+
         C = 1;
 
-        D = A - B + C; // 9 - 0 + 1 = 10
-
-      } else {
-        // A is in {10,11,12,13,15,16,17,18}
         
-        // Rule: Op2 must be '+'
-        op2 = "+";
-
-        // Rule: B=9
-        B = 9;
-
-        const step1 = A - B; // 1 to 9 (specifically matches A selection)
-
-        // Rule: C = {1..9} with exclusions based on (A-B)
-        const validCs: number[] = [];
-        
-        // Determine exclusions based on step1 (A-B)
-        const excludedCs = new Set<number>();
-        if (step1 === 6) {
-           excludedCs.add(6);
-           excludedCs.add(7);
-           excludedCs.add(8);
-        } else if (step1 === 7) {
-           excludedCs.add(6);
-           excludedCs.add(7);
-        } else if (step1 === 8) {
-           excludedCs.add(6);
-        }
-
-        for (let c = 1; c <= 9; c++) {
-          if (!excludedCs.has(c)) {
-            validCs.push(c);
-          }
-        }
-
-        if (validCs.length === 0) continue;
-        C = validCs[Math.floor(Math.random() * validCs.length)];
 
         D = A - B + C;
+
+      } else {
+
+        // Rule: A = {10,11,12,13,15,16,17,18} (14 excluded)
+
+        const aOptions = [10, 11, 12, 13, 15, 16, 17, 18];
+
+        A = aOptions[Math.floor(Math.random() * aOptions.length)];
+
+        
+
+        // Rule: B = 9
+
+        B = 9;
+
+        
+
+        const step1 = A - B; // Will be 1,2,3,4, 6,7,8,9
+
+
+
+        // Rule: C = 1-9, with exclusions based on step1 (A-B)
+
+        const possibleCs: number[] = [];
+
+        
+
+        // Logic: 
+
+        // if step1=6 then C != {6,7,8}
+
+        // if step1=7 then C != {6,7}
+
+        // if step1=8 then C != {6}
+
+        const exclusions = new Set<number>();
+
+        if (step1 === 6) {
+
+          exclusions.add(6); exclusions.add(7); exclusions.add(8);
+
+        } else if (step1 === 7) {
+
+          exclusions.add(6); exclusions.add(7);
+
+        } else if (step1 === 8) {
+
+          exclusions.add(6);
+
+        }
+
+
+
+        for (let x = 1; x <= 9; x++) {
+
+          if (!exclusions.has(x)) possibleCs.push(x);
+
+        }
+
+
+
+        if (possibleCs.length === 0) continue;
+
+        C = possibleCs[Math.floor(Math.random() * possibleCs.length)];
+
+        
+
+        D = step1 + C;
+
       }
+
     }
+
+
 
     // Final Validation
-    // A is 1-50 (satisfied by specific sets)
-    // B, C are 1-9 (except B=0 allowed for A=9 case)
-    // D is 0-50
+
+    // We allow B=0 strictly for the A=9 case override
+
     const isValidB = (A === 9 && op1 === "-" && B === 0) ? true : (B >= 1 && B <= 9);
 
+
+
     if (
+
       A >= 1 && A <= 50 &&
+
       isValidB &&
+
       C >= 1 && C <= 9 &&
+
       D >= 0 && D <= 50
+
     ) {
+
       questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+
     }
+
   }
 
+
+
   return questions;
+
 }
 
 // ---------- Book 1 Chapter 2 Lower 2-Digits ----------
