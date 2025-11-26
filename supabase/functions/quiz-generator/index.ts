@@ -12,64 +12,196 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
-// ---------- Book 1 Chapter 1 Lower ----------
-function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
-  const out: Question[] = [];
+// ---------- Custom Mixed Rules ----------
 
-  function r14() {
-    return Math.floor(Math.random() * 4) + 1;
-  }
-  
-  function rOp() {
-    return Math.random() < 0.5 ? "+" : "-";
-  }
+function randomChapter1Lower(numQuestions = 10): Question[] {
+
+  const out: Question[] = [];
 
   let attempts = 0;
 
+
+
   while (out.length < numQuestions && attempts < 5000) {
+
     attempts++;
 
-    // 1. Generate A (1,2,3,4)
-    const A = r14();
-    const op1 = rOp();
-
-    // 2. Generate B based on Op1 rules
-    let validBs: number[] = [];
-    for (let b = 1; b <= 4; b++) {
-      if (op1 === "+") {
-        if (b < 5 - A) validBs.push(b);
-      } else {
-        if (b <= A) validBs.push(b);
-      }
-    }
-
-    if (validBs.length === 0) continue;
     
-    const B = validBs[Math.floor(Math.random() * validBs.length)];
-    const stage1 = op1 === "+" ? A + B : A - B;
 
-    // 3. Generate C based on Op2 rules
-    const op2 = rOp();
-    let validCs: number[] = [];
-    for (let c = 1; c <= 4; c++) {
-      if (op2 === "+") {
-        if (c < 5 - stage1) validCs.push(c);
-      } else {
-        if (c <= stage1) validCs.push(c);
-      }
+    // We randomly select one of the 3 scenarios described in the requirements
+
+    const scenario = Math.floor(Math.random() * 3);
+
+    
+
+    let A = 0, B = 0, C = 0;
+
+    let op1 = "+", op2 = "+";
+
+    
+
+    if (scenario === 0) {
+
+        // --- SCENARIO 1 ---
+
+        // Op1 is '+', A = {1,2,3,4}
+
+        // Op2 must be '-'
+
+        // B must be >= 10 - A (and within 1-9)
+
+        // C must be 9
+
+        
+
+        op1 = "+";
+
+        op2 = "-";
+
+        A = Math.floor(Math.random() * 4) + 1; // 1 to 4
+
+        
+
+        const minB = 10 - A;
+
+        // The condition "x != 4-A" and "x != 14-A" are naturally satisfied 
+
+        // because if x >= 10-A (which is 6+), it can't be 4-A (max 3).
+
+        // Since B is max 9, it can't be 14-A (min 10).
+
+        
+
+        const validBs: number[] = [];
+
+        for (let k = minB; k <= 9; k++) validBs.push(k);
+
+        
+
+        if (validBs.length === 0) continue;
+
+        B = validBs[Math.floor(Math.random() * validBs.length)];
+
+        
+
+        C = 9;
+
+
+
+    } else if (scenario === 1) {
+
+        // --- SCENARIO 2 ---
+
+        // Op1 is '-', A = {10,11,12,13,15,16,17,18}
+
+        // Op2 must be '+', B = 9
+
+        // C has specific exclusions based on (A-B)
+
+        
+
+        op1 = "-";
+
+        op2 = "+";
+
+        const aOptions = [10, 11, 12, 13, 15, 16, 17, 18];
+
+        A = aOptions[Math.floor(Math.random() * aOptions.length)];
+
+        B = 9;
+
+        
+
+        const intermediate = A - B;
+
+        
+
+        // Exclusions for C based on intermediate result
+
+        const invalidCs = new Set<number>();
+
+        if (intermediate === 6) {
+
+            invalidCs.add(6); invalidCs.add(7); invalidCs.add(8);
+
+        } else if (intermediate === 7) {
+
+            invalidCs.add(6); invalidCs.add(7);
+
+        } else if (intermediate === 8) {
+
+            invalidCs.add(6);
+
+        }
+
+        
+
+        const validCs: number[] = [];
+
+        for (let k = 1; k <= 9; k++) {
+
+            if (!invalidCs.has(k)) validCs.push(k);
+
+        }
+
+        
+
+        if (validCs.length === 0) continue;
+
+        C = validCs[Math.floor(Math.random() * validCs.length)];
+
+
+
+    } else {
+
+        // --- SCENARIO 3 ---
+
+        // Op1 is '+', A = {9}
+
+        // Op2 must be '-', B = {1..9}
+
+        // C must be 9
+
+        
+
+        op1 = "+";
+
+        op2 = "-";
+
+        A = 9;
+
+        B = Math.floor(Math.random() * 9) + 1; // 1 to 9
+
+        C = 9;
+
     }
 
-    if (validCs.length === 0) continue;
 
-    const C = validCs[Math.floor(Math.random() * validCs.length)];
-    const D = op2 === "+" ? stage1 + C : stage1 - C;
 
-    if (D >= 0 && D <= 4) {
-      out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    // Calculate result
+
+    const step1 = op1 === "+" ? A + B : A - B;
+
+    const D = op2 === "+" ? step1 + C : step1 - C;
+
+
+
+    // Final Validation
+
+    // A=1-50, B,C=1-9, D=0-50
+
+    if (D >= 0 && D <= 50) {
+
+        out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+
     }
+
   }
 
+
+
   return out;
+
 }
 
 // ---------- Book 1 Chapter 2 Lower 2-Digits ----------
