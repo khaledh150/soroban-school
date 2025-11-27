@@ -102,6 +102,19 @@
   pointer-events: none;
 }
 
+/* --- NEW: Unit Marker (The Heart) --- */
+.unit-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%); /* -60% to visually center the heart better on the thin line */
+  font-size: 14px; 
+  line-height: 1;
+  z-index: 2; /* Same as bar, so active beads (z-index 3) cover it */
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+}
+
 /* Beads */
 .bead {
   width: 90px;

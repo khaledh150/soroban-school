@@ -112,9 +112,16 @@ const SorobanBoard = forwardRef((props, ref) => {
     }
 
     // --- BUILD BOARD ---
-    function createRod() {
+    function createRod(index) {
       const rod = document.createElement("div");
       rod.className = "rod";
+      
+      // Calculate if this is the 4th rod from the right (Index 4 in a 0-7 array)
+      // 0 1 2 3 [4] 5 6 7  <- 8 rods total
+      //         ^ 4th from right
+      const isUnitRod = index === 4;
+      const marker = isUnitRod ? '<div class="unit-marker">❤️</div>' : '';
+
       // Added aria-hidden to decorative structural elements
       rod.innerHTML = `
         <div class="rod-line" aria-hidden="true"></div>
@@ -128,7 +135,7 @@ const SorobanBoard = forwardRef((props, ref) => {
           <div class="bead earth" role="button" aria-label="Earth bead 3"></div>
           <div class="bead earth" role="button" aria-label="Earth bead 4"></div>
         </div>
-        <div class="bar" aria-hidden="true"></div>
+        <div class="bar" aria-hidden="true">${marker}</div>
       `;
       return rod;
     }
@@ -136,7 +143,7 @@ const SorobanBoard = forwardRef((props, ref) => {
     // Create 8 Rods
     const frag = document.createDocumentFragment();
     for (let i = 0; i < 8; i++) {
-      frag.appendChild(createRod());
+      frag.appendChild(createRod(i));
     }
     board.appendChild(frag);
 

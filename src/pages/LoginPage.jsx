@@ -44,19 +44,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#d8e9fa] flex flex-col items-center justify-center px-4 relative overflow-y-auto py-4">
+    // FIX 1: Changed min-h-screen to h-screen to prevent unnecessary scroll on mobile
+    <div className="h-screen w-full bg-[#d8e9fa] flex flex-col items-center justify-center px-4 relative overflow-hidden">
       
       {/* Background Decorations */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-violet-200/50 rounded-full blur-3xl animate-pulse"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-pink-200/50 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
       {/* --- MASSIVE LOGO (With Negative Margin to pull card up) --- */}
-      {/* -mb-12 pulls the card up by 3rem (48px) to remove the gap */}
-      <div className="relative z-10 -mb-8 md:-mb-7 animate-scale-in shrink-0">
+      {/* FIX 2: Reduced logo size for mobile (w-48) and increased negative margin (-mb-10) to raise card */}
+      <div className="relative z-10 -mb-10 md:-mb-7 animate-scale-in shrink-0">
         <img 
           src={logoImg} 
           alt="Wonder Kids Logo" 
-          className="w-74 h-74 md:w-[300px] md:h-[300px] object-contain drop-shadow-2xl"
+          className="w-48 h-48 md:w-[300px] md:h-[300px] object-contain drop-shadow-2xl"
         />
       </div>
 

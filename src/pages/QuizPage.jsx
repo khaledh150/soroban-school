@@ -494,9 +494,20 @@ export default function QuizPage() {
             .feedback-icon { font-size: 25vh; }
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
             
+            /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
+            .ready-go-text { font-size: 5rem; line-height: 1; }
+            
             .status-row { font-size: 0.85rem; margin-bottom: 2px; }
             .top-bar { margin-bottom: 2px; }
             .icon-btn { width: 30px; height: 30px; font-size: 0.9rem; }
+
+            /* FIX: Settings overflowing */
+            .settings-card { padding: 0.5rem 1rem; gap: 0.5rem; max-height: 90vh; overflow-y: auto; width: 80vw; max-width: 400px; }
+            .settings-card label { margin-bottom: 0; font-size: 0.95rem; }
+            .settings-card input[type="number"], .settings-card select { font-size: 0.95rem; padding: 0.2rem 0.5rem; width: 3.5em; }
+            .settings-card input[type="checkbox"] { width: 1.5em; height: 1.5em; }
+            .settings-actions { margin-top: 0.5rem; gap: 0.8rem; }
+            .settings-actions button { font-size: 1rem !important; padding: 0.3rem 1rem !important; min-height: 2em; }
         }
 
         /* === PORTRAIT MODE (COMPACT + HUGE NUMBERS) === */
@@ -519,6 +530,9 @@ export default function QuizPage() {
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
+            
+            /* FIX: Match Ready text size to Flash Token size in portrait */
+            .ready-go-text { font-size: clamp(10rem, 55vw, 25rem); line-height: 1; }
         }
       `}</style>
 
