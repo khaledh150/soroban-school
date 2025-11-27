@@ -18,7 +18,6 @@ export default defineConfig({
         theme_color: '#111827', // Matched to your dark theme background
         background_color: '#111827',
         display: 'standalone',
-        orientation: 'landscape',
         scope: '/',
         start_url: '/',
         icons: [
