@@ -383,7 +383,16 @@ export default function QuizPage() {
     const runSeq = () => {
         if (!isMounted.current) return;
         
-        setFlashContent(<div className="ready-go-text">{seq[i]}</div>);
+        const text = seq[i];
+        
+        // FIX: Check if text is a word (length > 1) or a number
+        const isWord = text.length > 1;
+
+        setFlashContent(
+            <div className={`ready-go-text ${isWord ? 'word-mode' : ''}`}>
+                {text}
+            </div>
+        );
         
         const delays = [800, 800, 800, 800, 800]; 
         
@@ -531,8 +540,9 @@ export default function QuizPage() {
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
-            /* FIX: Match Ready text size to Flash Token size in portrait */
+            /* FIX: Match Ready numbers size to Flash Token, but shrink WORDS (Get, Ready) */
             .ready-go-text { font-size: clamp(10rem, 55vw, 25rem); line-height: 1; }
+            .ready-go-text.word-mode { font-size: clamp(6rem, 25vw, 12rem); }
         }
       `}</style>
 

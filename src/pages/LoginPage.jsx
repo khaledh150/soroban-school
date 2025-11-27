@@ -53,11 +53,11 @@ export default function LoginPage() {
 
       {/* --- MASSIVE LOGO (With Negative Margin to pull card up) --- */}
       {/* FIX 2: Reduced logo size for mobile (w-48) and increased negative margin (-mb-10) to raise card */}
-      <div className="relative z-10 -mb-10 md:-mb-7 animate-scale-in shrink-0">
+      <div className="relative z-10 -mb-2 md:-mb-7 animate-scale-in shrink-0">
         <img 
           src={logoImg} 
           alt="Wonder Kids Logo" 
-          className="w-48 h-48 md:w-[300px] md:h-[300px] object-contain drop-shadow-2xl"
+          className="w-74 h-74 md:w-[300px] md:h-[300px] object-contain drop-shadow-2xl"
         />
       </div>
 
