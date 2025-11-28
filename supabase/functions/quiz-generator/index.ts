@@ -12,45 +12,76 @@ const corsHeaders = {
   "Content-Type": "application/json",
 };
 
+// --- HELPER: Fill array with repeats if we ran out of unique questions ---
+function fillQuestions(questions: Question[], target: number): Question[] {
+  const count = questions.length;
+  // If we found nothing (rare) or we have enough, return as is
+  if (count === 0 || count >= target) return questions;
+  
+  // Fill the remaining slots by repeating the unique ones
+  for (let i = count; i < target; i++) {
+    questions.push(questions[i % count]);
+  }
+  return questions;
+}
+
 // ================= BOOK 1 FUNCTIONS =================
 
 function randomChapter1Lower(numQuestions = 10, numNumbers = 4): Question[] {
-  const out: Question[] = [];
+  const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
+  let attempts = 0;
+
   function r14() { return Math.floor(Math.random() * 4) + 1; }
   function rOp() { return Math.random() < 0.5 ? "+" : "-"; }
-  let attempts = 0;
-  while (out.length < numQuestions && attempts < 5000) {
+
+  // Phase 1: Hunt for unique questions
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const A = r14();
     const op1 = rOp();
+    
     let validBs: number[] = [];
     for (let b = 1; b <= 4; b++) {
       if (op1 === "+") { if (b < 5 - A) validBs.push(b); } 
       else { if (b <= A) validBs.push(b); }
     }
     if (validBs.length === 0) continue;
+    
     const B = validBs[Math.floor(Math.random() * validBs.length)];
     const stage1 = op1 === "+" ? A + B : A - B;
     const op2 = rOp();
+    
     let validCs: number[] = [];
     for (let c = 1; c <= 4; c++) {
       if (op2 === "+") { if (c < 5 - stage1) validCs.push(c); } 
       else { if (c <= stage1) validCs.push(c); }
     }
     if (validCs.length === 0) continue;
+    
     const C = validCs[Math.floor(Math.random() * validCs.length)];
     const D = op2 === "+" ? stage1 + C : stage1 - C;
-    if (D >= 0 && D <= 4) out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (D >= 0 && D <= 4 && !uniqueSet.has(qStr)) {
+       questions.push({ q: qStr, a: D.toString() });
+       uniqueSet.add(qStr);
+    }
   }
-  return out;
+  // Phase 2: Fill if needed
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter2Lower2Digits(numQuestions = 10): Question[] {
-  const out: Question[] = [];
+  const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
+  let attempts = 0;
+
   function r14() { return Math.floor(Math.random() * 4) + 1; }
   function r04() { return Math.floor(Math.random() * 5); }
   function rOp() { return Math.random() < 0.5 ? "+" : "-"; }
   function evalOp(x: number, o: string, y: number) { return o === "+" ? x + y : x - y; }
+  
   function getDigitSequence(op1: string, op2: string, aGen: () => number): number[] | null {
     const A = aGen();
     if (A === 0 && op1 === "-") return null;
@@ -74,51 +105,74 @@ function randomChapter2Lower2Digits(numQuestions = 10): Question[] {
     if (D < 0 || D > 4) return null;
     return [A, B, C];
   }
-  let attempts = 0;
-  while (out.length < numQuestions && attempts < 5000) {
+
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const op1 = rOp(); const op2 = rOp();
     const tensSeq = getDigitSequence(op1, op2, r14); if (!tensSeq) continue;
     const unitsSeq = getDigitSequence(op1, op2, r04); if (!unitsSeq) continue;
+    
     const valM = (tensSeq[0] * 10) + unitsSeq[0];
     const valN = (tensSeq[1] * 10) + unitsSeq[1];
     const valO = (tensSeq[2] * 10) + unitsSeq[2];
+    
     const stage1 = evalOp(valM, op1, valN);
     const valP = evalOp(stage1, op2, valO);
-    if (valP >= 0 && valP <= 49) out.push({ q: `${valM} ${op1} ${valN} ${op2} ${valO}`, a: valP.toString() });
+    
+    const qStr = `${valM} ${op1} ${valN} ${op2} ${valO}`;
+    if (valP >= 0 && valP <= 49 && !uniqueSet.has(qStr)) {
+        questions.push({ q: qStr, a: valP.toString() });
+        uniqueSet.add(qStr);
+    }
   }
-  return out;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapterChapter3Upper(numQuestions = 10): Question[] {
-    const out: Question[] = [];
+    const questions: Question[] = [];
+    const uniqueSet = new Set<string>();
+    let attempts = 0;
+
     function r15() { return Math.floor(Math.random() * 5) + 1; }
     function rOp() { return Math.random() < 0.5 ? "+" : "-"; }
     function evalOp(x: number, o: string, y: number) { return o === "+" ? x + y : x - y; }
-    while (out.length < numQuestions) {
+
+    while (questions.length < numQuestions && attempts < 4000) {
+        attempts++;
         const A = r15(); const B = r15(); const C = r15(); const op1 = rOp();
         if (A === 5 && op1 === "-" && B !== 5) continue;
         if (A === 5 && op1 === "+" && B === 5) continue;
         if (A === 4 && op1 === "-" && !(B >= 1 && B <= 4)) continue;
         if (A === 4 && op1 === "+" && B !== 5) continue;
         if (A <= 4 && Math.abs(evalOp(A, op1, B)) > 4) continue;
+        
         const AB = evalOp(A, op1, B);
         if (AB < 0 || AB > 9 || AB === 5) continue;
+        
         let op2 = AB === 0 ? "+" : rOp();
         if (AB === 4 && C !== 5) continue;
         if (A === 5 && op2 === "+" && !(AB + C >= 5 && AB + C <= 9)) continue;
         if (A === 5 && op2 === "-" && !(B > C)) continue;
+        
         const D = evalOp(AB, op2, C);
         if (D < 0 || D > 9 || D === 5) continue;
         if (AB < 4 && !(D < 4 || C === 5)) continue;
         if (A + B === 5 || A + C === 5 || B + C === 5) continue;
-        out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+        
+        const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+        if (!uniqueSet.has(qStr)) {
+            questions.push({ q: qStr, a: D.toString() });
+            uniqueSet.add(qStr);
+        }
     }
-    return out;
+    return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter4MixLowerUpper(numQuestions = 10): Question[] {
-    const out: Question[] = [];
+    const questions: Question[] = [];
+    const uniqueSet = new Set<string>();
+    let attempts = 0;
+
     function r19() { return Math.floor(Math.random() * 9) + 1; }
     function rOp() { return Math.random() < 0.5 ? "+" : "-"; }
     function evalOp(x: number, o: string, y: number) { return o === "+" ? x + y : x - y; }
@@ -149,7 +203,9 @@ function randomChapter4MixLowerUpper(numQuestions = 10): Question[] {
         if (S <= 4) return C < S;
         if (S === 5) return C === 5; return C <= S - 5 || C === 5;
     }
-    while (out.length < numQuestions) {
+
+    while (questions.length < numQuestions && attempts < 4000) {
+        attempts++;
         const A = r19(); const op1 = rOp();
         let B = choose(r19, (b: number) => (op1 === "+" ? validB_plus(A, b) : validB_minus(A, b)));
         if (B == null) continue;
@@ -165,13 +221,21 @@ function randomChapter4MixLowerUpper(numQuestions = 10): Question[] {
         if (C == null) continue;
         const D = evalOp(stage1, op2, C);
         if (D < 0 || D > 9) continue;
-        out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+        
+        const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+        if (!uniqueSet.has(qStr)) {
+            questions.push({ q: qStr, a: D.toString() });
+            uniqueSet.add(qStr);
+        }
     }
-    return out;
+    return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter5MixUpperLower2Digits(numQuestions = 10): Question[] {
-  const out: Question[] = [];
+  const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
+  let attempts = 0;
+
   function r19() { return Math.floor(Math.random() * 9) + 1; }
   function r09() { return Math.floor(Math.random() * 10); }
   function rOp() { return Math.random() < 0.5 ? "+" : "-"; }
@@ -220,9 +284,9 @@ function randomChapter5MixUpperLower2Digits(numQuestions = 10): Question[] {
     if (D < 0 || D > 9) return null;
     return [A, B, C];
   }
-  let safetyCounter = 0;
-  while (out.length < numQuestions && safetyCounter < 5000) {
-    safetyCounter++;
+
+  while (questions.length < numQuestions && attempts < 4000) {
+    attempts++;
     const op1 = rOp(); const op2 = rOp();
     const tensSeq = getDigitSequence(op1, op2, r19); if (!tensSeq) continue;
     const unitsSeq = getDigitSequence(op1, op2, r09); if (!unitsSeq) continue;
@@ -231,14 +295,23 @@ function randomChapter5MixUpperLower2Digits(numQuestions = 10): Question[] {
     const valC = (tensSeq[2] * 10) + unitsSeq[2];
     const stage1 = evalOp(valA, op1, valB);
     const valD = evalOp(stage1, op2, valC);
-    out.push({ q: `${valA} ${op1} ${valB} ${op2} ${valC}`, a: valD.toString() });
+    
+    const qStr = `${valA} ${op1} ${valB} ${op2} ${valC}`;
+    if (!uniqueSet.has(qStr)) {
+        questions.push({ q: qStr, a: valD.toString() });
+        uniqueSet.add(qStr);
+    }
   }
-  return out;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter6FivebuddyPlus4(numQuestions = 10): Question[] {
   const questions: Question[] = [];
-  while (questions.length < numQuestions) {
+  const uniqueSet = new Set<string>();
+  let attempts = 0;
+  
+  while (questions.length < numQuestions && attempts < 4000) {
+    attempts++;
     let A = 0, B = 0, C = 0, op1 = "+", op2 = "+";
     const startWithPlus = Math.random() < 0.5;
     if (startWithPlus) {
@@ -262,17 +335,22 @@ function randomChapter6FivebuddyPlus4(numQuestions = 10): Question[] {
     let result = op1 === "+" ? A + B : A - B;
     result = op2 === "+" ? result + C : result - C;
     const isCValid = (C >= 1 && C <= 9) || (C === 0);
-    if (A >= 1 && A <= 9 && B >= 4 && B <= 5 && isCValid && result >= 0 && result <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: result.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    
+    if (A >= 1 && A <= 9 && B >= 4 && B <= 5 && isCValid && result >= 0 && result <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: result.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter7FivebuddyPlus3(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     let isValidQuestion = true;
@@ -297,17 +375,22 @@ function randomChapter7FivebuddyPlus3(numQuestions = 10): Question[] {
     let result = op1 === "+" ? A + B : A - B;
     result = op2 === "+" ? result + C : result - C;
     const isCValid = (C >= 1 && C <= 9) || (C === 0 && op1 === "+" && op2 === "-" && A + B === 5); 
-    if (isValidQuestion && A >= 1 && A <= 9 && B >= 3 && B <= 5 && B !== 4 && isCValid && result >= 0 && result <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: result.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    
+    if (isValidQuestion && A >= 1 && A <= 9 && B >= 3 && B <= 5 && B !== 4 && isCValid && result >= 0 && result <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: result.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }  
 
 function randomChapter8FivebuddyPlus2(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     let isValidQuestion = true;
@@ -330,17 +413,22 @@ function randomChapter8FivebuddyPlus2(numQuestions = 10): Question[] {
     let result = op1 === "+" ? A + B : A - B;
     result = op2 === "+" ? result + C : result - C;
     const isCValid = (C >= 1 && C <= 9) || (C === 0 && op1 === "+" && op2 === "-" && A + B === 5); 
-    if (isValidQuestion && A >= 1 && A <= 9 && (B === 2 || B === 5) && isCValid && result >= 0 && result <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: result.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    
+    if (isValidQuestion && A >= 1 && A <= 9 && (B === 2 || B === 5) && isCValid && result >= 0 && result <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: result.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter9FivebuddyPlus1(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1 = "+", op2 = "+", D = 0;
     const caseType = Math.random() < 0.5 ? 1 : 2;
@@ -350,16 +438,22 @@ function randomChapter9FivebuddyPlus1(numQuestions = 10): Question[] {
     } else {
       op1 = "-"; A = 9; B = 5; const step1 = A - B; op2 = "+"; C = 1; D = step1 + C;
     }
-    if (A >= 1 && A <= 9 && C >= 1 && C <= 9 && D >= 0 && D <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (A >= 1 && A <= 9 && C >= 1 && C <= 9 && D >= 0 && D <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: D.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter10FiveBuddyPlus(numQuestions = 10): Question[] {
-    const out: Question[] = [];
-    while (out.length < numQuestions) {
+    const questions: Question[] = [];
+    const uniqueSet = new Set<string>();
+    let attempts = 0;
+    
+    while (questions.length < numQuestions && attempts < 4000) {
+        attempts++;
         const op1 = Math.random() < 0.5 ? "+" : "-";
         const op2 = Math.random() < 0.5 ? "+" : "-";
         let A, B, C;
@@ -383,80 +477,103 @@ function randomChapter10FiveBuddyPlus(numQuestions = 10): Question[] {
         if (A === undefined || B === undefined || C === undefined) continue;
         const stage1 = op1 === "+" ? A + B : A - B;
         const D = op2 === "+" ? stage1 + C : stage1 - C;
-        if (D < 0 || D > 9) continue;
-        out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+        const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+        if (D >= 0 && D <= 9 && !uniqueSet.has(qStr)) {
+            questions.push({ q: qStr, a: D.toString() });
+            uniqueSet.add(qStr);
+        }
     }
-    return out;
+    return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter11FiveBuddyMinus4(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 4, op1 = "+", op2 = "-", D = 0;
     const caseType = Math.random() < 0.5 ? 1 : 2;
     if (caseType === 1) { op1 = "+"; A = Math.floor(Math.random() * 4) + 1; const o1 = 5; const o2 = 5 - A; B = Math.random() < 0.5 ? o1 : o2; C = 4; D = A + B - C; } 
     else { op1 = "-"; const aOpt = [6, 7, 8, 9]; A = aOpt[Math.floor(Math.random() * aOpt.length)]; B = A - 5; C = 4; D = A - B - C; }
-    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 4 && D >= 0 && D <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 4 && D >= 0 && D <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: D.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter12FivebuddyMinus3(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 3, op1 = "+", op2 = "-", D = 0;
     const caseType = Math.random() < 0.5 ? 1 : 2;
     if (caseType === 1) { op1 = "+"; A = Math.floor(Math.random() * 4) + 1; const o1 = 5; const o2 = 5 - A; B = Math.random() < 0.5 ? o1 : o2; C = 3; D = A + B - C; } 
     else { op1 = "-"; const aOpt = [6, 7, 8, 9]; A = aOpt[Math.floor(Math.random() * aOpt.length)]; B = A - 5; C = 3; D = A - B - C; }
-    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 3 && D >= 0 && D <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 3 && D >= 0 && D <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: D.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter13FivebuddyMinus2(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 2, op1 = "+", op2 = "-", D = 0;
     const caseType = Math.random() < 0.5 ? 1 : 2;
     if (caseType === 1) { op1 = "+"; A = Math.floor(Math.random() * 4) + 1; B = 5 - A; C = 2; D = A + B - C; } 
     else { op1 = "-"; const aOpt = [6, 7, 8, 9]; A = aOpt[Math.floor(Math.random() * aOpt.length)]; B = A - 5; C = 2; D = A - B - C; }
-    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 2 && D >= 0 && D <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 2 && D >= 0 && D <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: D.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter14FivebuddyMinus1(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 1, op1 = "+", op2 = "-", D = 0;
     const caseType = Math.random() < 0.5 ? 1 : 2;
     if (caseType === 1) { op1 = "+"; A = Math.floor(Math.random() * 4) + 1; B = 5 - A; C = 1; D = A + B - C; } 
     else { op1 = "-"; const aOpt = [6, 7, 8, 9]; A = aOpt[Math.floor(Math.random() * aOpt.length)]; B = A - 5; C = 1; D = A - B - C; }
-    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 1 && D >= 0 && D <= 9) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C === 1 && D >= 0 && D <= 9 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: D.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter15FiveBuddyMinus(numQuestions = 10): Question[] {
     let A, B, C, op2, D, expr;
     const questions: Question[] = [];
-    while (questions.length < numQuestions) {
+    const uniqueSet = new Set<string>();
+    let attempts = 0;
+    
+    while (questions.length < numQuestions && attempts < 4000) {
+        attempts++;
         let caseType = Math.random() < 0.5 ? 1 : 2;
         if (caseType === 1) {
             A = 5; B = [1, 2, 3, 4][Math.floor(Math.random() * 4)]; let AB = A - B; op2 = Math.random() < 0.5 ? "+" : "-";
@@ -468,16 +585,20 @@ function randomChapter15FiveBuddyMinus(numQuestions = 10): Question[] {
             if (op2 === "+") { C = Math.floor(Math.random() * 5) + 1; D = AB + C; } else { if (AB < 1) continue; C = Math.floor(Math.random() * AB) + 1; D = AB - C; }
             expr = `${A} - ${B} ${op2} ${C}`;
         }
-        if ([A, B, C].every((v) => v >= 1 && v <= 9) && D >= 0 && D <= 9) { questions.push({ q: expr, a: D.toString() }); }
+        if ([A, B, C].every((v) => v >= 1 && v <= 9) && D >= 0 && D <= 9 && !uniqueSet.has(expr)) { 
+            questions.push({ q: expr, a: D.toString() });
+            uniqueSet.add(expr);
+        }
     }
-    return questions;
+    return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter16FiveBuddyPlusMinus(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     let isValidQuestion = true;
@@ -504,12 +625,14 @@ function randomChapter16FiveBuddyPlusMinus(numQuestions = 10): Question[] {
       uniqueQuestions.add(questionString); 
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomChapter17Mix5buddy2digits(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
+  
   function getDigitComponents(op1: string, op2: string): { A: number; B: number; C: number; D: number } | null {
     let A = 0, B = 0, C = 0, D = 0;
     if (op1 === "+") {
@@ -525,7 +648,7 @@ function randomChapter17Mix5buddy2digits(numQuestions = 10): Question[] {
     if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 1 && C <= 9 && D >= 0 && D <= 9) return { A, B, C, D };
     return null;
   }
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const op1 = Math.random() < 0.5 ? "+" : "-"; const op2 = Math.random() < 0.5 ? "+" : "-";
     const tens = getDigitComponents(op1, op2); if (!tens) continue;
@@ -533,9 +656,14 @@ function randomChapter17Mix5buddy2digits(numQuestions = 10): Question[] {
     const M = (tens.A * 10) + units.A; const N = (tens.B * 10) + units.B; const O = (tens.C * 10) + units.C;
     let step1 = 0; if (op1 === "+") step1 = M + N; else step1 = M - N;
     let P = 0; if (op2 === "+") P = step1 + O; else P = step1 - O;
-    if (P >= 0 && P <= 99) questions.push({ q: `${M} ${op1} ${N} ${op2} ${O}`, a: P.toString() });
+    
+    const qStr = `${M} ${op1} ${N} ${op2} ${O}`;
+    if (P >= 0 && P <= 99 && !uniqueSet.has(qStr)) {
+        questions.push({ q: qStr, a: P.toString() });
+        uniqueSet.add(qStr);
+    }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 // ================= BOOK 2 FUNCTIONS (TEN BUDDY) =================
@@ -544,7 +672,7 @@ function randomBook2Chapter1TenBuddyPlus9(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0;
     let op1: "+" | "-" = "+", op2: "+" | "-" = "+";
@@ -584,14 +712,14 @@ function randomBook2Chapter1TenBuddyPlus9(numQuestions = 10): Question[] {
       uniqueQuestions.add(questionString); 
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter2TenBuddyPlus8(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0;
     let op1: "+" | "-" = "+", op2: "+" | "-" = "+";
@@ -626,13 +754,14 @@ function randomBook2Chapter2TenBuddyPlus8(numQuestions = 10): Question[] {
       uniqueQuestions.add(questionString); 
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter3TenBuddyPlus7(numQuestions = 10): Question[] {
   const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1 = "+", op2 = "+", D = 0;
     const op1Type = Math.random() < 0.6 ? "+" : "-"; 
@@ -659,18 +788,20 @@ function randomBook2Chapter3TenBuddyPlus7(numQuestions = 10): Question[] {
       op1 = "-"; const aOptions = [6, 7, 8, 9]; A = aOptions[Math.floor(Math.random() * aOptions.length)];
       B = 5; op2 = "+"; C = 7; const step1 = A - B; D = step1 + C;
     }
-    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 0 && C <= 9 && D >= 0 && D <= 50) {
-      questions.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() });
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 0 && C <= 9 && D >= 0 && D <= 50 && !uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: D.toString() });
+      uniqueSet.add(qStr);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter4TenBuddyPlus6(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     const scenario = Math.floor(Math.random() * 4);
@@ -700,14 +831,14 @@ function randomBook2Chapter4TenBuddyPlus6(numQuestions = 10): Question[] {
        uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter5TenBuddyPlus5(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     let isValidQuestion = true;
@@ -735,14 +866,14 @@ function randomBook2Chapter5TenBuddyPlus5(numQuestions = 10): Question[] {
       uniqueQuestions.add(questionString); 
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter6TenBuddyPlus4(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     let isValidQuestion = true;
@@ -773,14 +904,14 @@ function randomBook2Chapter6TenBuddyPlus4(numQuestions = 10): Question[] {
       uniqueQuestions.add(questionString); 
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter7TenBuddyPlus3(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     const scenario = Math.floor(Math.random() * 4);
@@ -810,14 +941,14 @@ function randomBook2Chapter7TenBuddyPlus3(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter8TenBuddyPlus2(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     const scenario = Math.floor(Math.random() * 4);
@@ -847,19 +978,17 @@ function randomBook2Chapter8TenBuddyPlus2(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter9TenBuddyPlus1(numQuestions = 10): Question[] {
   const questions: Question[] = [];
-  const allUniqueQuestions: { q: string, a: string }[] = [];
   const uniqueKeys = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => {
     const actualMin = Math.max(1, min); const actualMax = Math.min(max, 50); return Math.floor(Math.random() * (actualMax - actualMin + 1)) + actualMin;
   };
-  const MAX_UNIQUE_ATTEMPTS = 5000;
-  while (attempts < MAX_UNIQUE_ATTEMPTS) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     const scenario = randRange(0, 2);
@@ -877,26 +1006,20 @@ function randomBook2Chapter9TenBuddyPlus1(numQuestions = 10): Question[] {
     const result = A + B + C;
     const questionString = `${A} + ${B} + ${C}`;
     if (A >= 1 && A <= 9 && B >= 1 && B <= 50 && C >= 1 && C <= 9 && result >= 0 && result <= 50 && !uniqueKeys.has(questionString)) {
-        allUniqueQuestions.push({ q: questionString, a: result.toString() });
+        questions.push({ q: questionString, a: result.toString() });
         uniqueKeys.add(questionString);
     }
   }
-  const uniqueCount = allUniqueQuestions.length;
-  if (uniqueCount === 0) return [];
-  for (let i = 0; i < numQuestions; i++) {
-    questions.push(allUniqueQuestions[i % uniqueCount]);
-  }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter10TenBuddyPlus(numQuestions = 10): Question[] {
   const questions: Question[] = [];
-  const allUniqueQuestions: { q: string, a: string }[] = [];
   const uniqueKeys = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-  const MAX_UNIQUE_ATTEMPTS = 5000;
-  while (attempts < MAX_UNIQUE_ATTEMPTS) {
+  
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
     const scenario = randRange(0, 3);
@@ -920,20 +1043,18 @@ function randomBook2Chapter10TenBuddyPlus(numQuestions = 10): Question[] {
     result = op2 === "+" ? result + C : result - C;
     const questionString = `${A} ${op1} ${B} ${op2} ${C}`;
     if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 1 && C <= 9 && result >= 0 && result <= 30 && !uniqueKeys.has(questionString)) {
-        allUniqueQuestions.push({ q: questionString, a: result.toString() });
+        questions.push({ q: questionString, a: result.toString() });
         uniqueKeys.add(questionString);
     }
   }
-  const uniqueCount = allUniqueQuestions.length;
-  if (uniqueCount === 0) return [];
-  for (let i = 0; i < numQuestions; i++) { questions.push(allUniqueQuestions[i % uniqueCount]); }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter11TenBuddyMinus9(numQuestions = 10): Question[] {
-  const out: Question[] = [];
+  const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
   let attempts = 0;
-  while (out.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const scenario = Math.floor(Math.random() * 3);
     let A = 0, B = 0, C = 0, op1 = "+", op2 = "+";
@@ -954,9 +1075,13 @@ function randomBook2Chapter11TenBuddyMinus9(numQuestions = 10): Question[] {
     }
     const step1 = op1 === "+" ? A + B : A - B;
     const D = op2 === "+" ? step1 + C : step1 - C;
-    if (D >= 0 && D <= 50) { out.push({ q: `${A} ${op1} ${B} ${op2} ${C}`, a: D.toString() }); }
+    const qStr = `${A} ${op1} ${B} ${op2} ${C}`;
+    if (D >= 0 && D <= 50 && !uniqueSet.has(qStr)) { 
+        questions.push({ q: qStr, a: D.toString() });
+        uniqueSet.add(qStr);
+    }
   }
-  return out;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter12TenBuddyMinus8(numQuestions = 10): Question[] {
@@ -964,7 +1089,7 @@ function randomBook2Chapter12TenBuddyMinus8(numQuestions = 10): Question[] {
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 2);
@@ -991,7 +1116,7 @@ function randomBook2Chapter12TenBuddyMinus8(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter13TenBuddyMinus7(numQuestions = 10): Question[] {
@@ -999,7 +1124,7 @@ function randomBook2Chapter13TenBuddyMinus7(numQuestions = 10): Question[] {
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 2);
@@ -1030,7 +1155,7 @@ function randomBook2Chapter13TenBuddyMinus7(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter14TenBuddyMinus6(numQuestions = 10): Question[] {
@@ -1038,7 +1163,7 @@ function randomBook2Chapter14TenBuddyMinus6(numQuestions = 10): Question[] {
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 2);
@@ -1066,7 +1191,7 @@ function randomBook2Chapter14TenBuddyMinus6(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter15TenBuddyMinus5(numQuestions = 10): Question[] {
@@ -1074,7 +1199,7 @@ function randomBook2Chapter15TenBuddyMinus5(numQuestions = 10): Question[] {
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 3);
@@ -1106,7 +1231,7 @@ function randomBook2Chapter15TenBuddyMinus5(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter16TenBuddyMinus4(numQuestions = 10): Question[] {
@@ -1114,7 +1239,7 @@ function randomBook2Chapter16TenBuddyMinus4(numQuestions = 10): Question[] {
   const uniqueQuestions = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 2);
@@ -1141,7 +1266,7 @@ function randomBook2Chapter16TenBuddyMinus4(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter17TenBuddyMinus3(numQuestions = 10): Question[] {
@@ -1152,7 +1277,7 @@ function randomBook2Chapter17TenBuddyMinus3(numQuestions = 10): Question[] {
   const getValidB = (minB: number, exclusions: number[]): number[] => {
     const validB: number[] = []; for (let x = minB; x <= 9; x++) { if (x >= 1 && !exclusions.includes(x)) { validB.push(x); } } return validB;
   };
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 5);
@@ -1186,7 +1311,7 @@ function randomBook2Chapter17TenBuddyMinus3(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter18TenBuddyMinus2(numQuestions = 10): Question[] {
@@ -1197,7 +1322,7 @@ function randomBook2Chapter18TenBuddyMinus2(numQuestions = 10): Question[] {
   const getValidB = (minB: number, exclusions: number[]): number[] => {
     const validB: number[] = []; for (let x = minB; x <= 9; x++) { if (x >= 1 && !exclusions.includes(x)) { validB.push(x); } } return validB;
   };
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 5);
@@ -1231,7 +1356,7 @@ function randomBook2Chapter18TenBuddyMinus2(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter19TenBuddyMinus1(numQuestions = 10): Question[] {
@@ -1242,7 +1367,7 @@ function randomBook2Chapter19TenBuddyMinus1(numQuestions = 10): Question[] {
   const getValidB = (minB: number, exclusions: number[]): number[] => {
     const validB: number[] = []; for (let x = minB; x <= 9; x++) { if (x >= 1 && !exclusions.includes(x)) { validB.push(x); } } return validB;
   };
-  while (questions.length < numQuestions && attempts < 5000) {
+  while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "-";
     const scenario = randRange(0, 5);
@@ -1276,12 +1401,11 @@ function randomBook2Chapter19TenBuddyMinus1(numQuestions = 10): Question[] {
         uniqueQuestions.add(questionString);
     }
   }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter20TenBuddyMinus(numQuestions = 10): Question[] {
   const questions: Question[] = [];
-  const allUniqueQuestions: { q: string, a: string }[] = [];
   const uniqueKeys = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -1309,19 +1433,15 @@ function randomBook2Chapter20TenBuddyMinus(numQuestions = 10): Question[] {
     let result = intermediateSum - C;
     const questionString = `${A} ${op1} ${B} ${op2} ${C}`;
     if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 1 && C <= 9 && result >= 0 && result <= 100 && !uniqueKeys.has(questionString)) {
-        allUniqueQuestions.push({ q: questionString, a: result.toString() });
+        questions.push({ q: questionString, a: result.toString() });
         uniqueKeys.add(questionString);
     }
   }
-  const uniqueCount = allUniqueQuestions.length;
-  if (uniqueCount === 0) return [];
-  for (let i = 0; i < numQuestions; i++) { questions.push(allUniqueQuestions[i % uniqueCount]); }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 function randomBook2Chapter21MixTenBuddy(numQuestions = 10): Question[] {
   const questions: Question[] = [];
-  const allUniqueQuestions: { q: string, a: string }[] = [];
   const uniqueKeys = new Set<string>();
   let attempts = 0;
   const randRange = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -1349,14 +1469,11 @@ function randomBook2Chapter21MixTenBuddy(numQuestions = 10): Question[] {
     let result = intermediateSum - C;
     const questionString = `${A} ${op1} ${B} ${op2} ${C}`;
     if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 1 && C <= 9 && result >= 0 && result <= 50 && !uniqueKeys.has(questionString)) {
-        allUniqueQuestions.push({ q: questionString, a: result.toString() });
+        questions.push({ q: questionString, a: result.toString() });
         uniqueKeys.add(questionString);
     }
   }
-  const uniqueCount = allUniqueQuestions.length;
-  if (uniqueCount === 0) return [];
-  for (let i = 0; i < numQuestions; i++) { questions.push(allUniqueQuestions[i % uniqueCount]); }
-  return questions;
+  return fillQuestions(questions, numQuestions!);
 }
 
 // ---------- generator selector ----------
