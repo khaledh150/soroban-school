@@ -30,8 +30,11 @@ export default function QuizPage() {
 
   const levelParam = parseInt(searchParams.get("level") || "1", 10);
   const chapterParam = parseInt(searchParams.get("chapter") || "1", 10);
+  
+  // Book = Level. We allow up to 10 books.
   const currentLevel = Math.max(1, Math.min(10, levelParam));
-  const currentChapter = Math.max(1, Math.min(20, chapterParam));
+  // Allow up to 21 chapters for Book 2
+  const currentChapter = Math.max(1, Math.min(21, chapterParam));
 
   const [view, setView] = useState("start");
   const [questionNum, setQuestionNum] = useState(1);
@@ -66,7 +69,6 @@ export default function QuizPage() {
   const rainSparkleRef = useRef(null);
   const sorobanRef = useRef(null);
   
-  // Track if component is mounted to stop speech on exit
   const isMounted = useRef(true);
 
   // --- PLAY SOUND ---
@@ -353,7 +355,10 @@ export default function QuizPage() {
       setInputLocked(true);
       setFlashContent(<div style={{fontSize:"2rem", color:"#888"}}>{t.loading}</div>);
       
+      // Sending book (level) AND chapter to the API
+      // FIX: Ensure 'book' is passed correctly
       const questions = await generateQuestions({
+        book: currentLevel,
         chapter: currentChapter,
         numQuestions: settings.numQuestions,
         numNumbers: 4,
@@ -368,7 +373,8 @@ export default function QuizPage() {
       });
 
     } catch (err) {
-      alert("Failed to load questions.");
+      console.error(err);
+      alert("Failed to load questions. Check console.");
       setView("start");
     }
   };
@@ -384,8 +390,6 @@ export default function QuizPage() {
         if (!isMounted.current) return;
         
         const text = seq[i];
-        
-        // FIX: Check if text is a word (length > 1) or a number
         const isWord = text.length > 1;
 
         setFlashContent(

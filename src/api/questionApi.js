@@ -6,7 +6,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://kbozsagzrrxss
 // Use the environment variable for the KEY
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
-export async function generateQuestions({ chapter, numQuestions = 20, numNumbers = 4 }) {
+export async function generateQuestions({ book = 1, chapter, numQuestions = 20, numNumbers = 4 }) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/quiz-generator`, {
     method: "POST",
     headers: {
@@ -15,7 +15,8 @@ export async function generateQuestions({ chapter, numQuestions = 20, numNumbers
         ? { Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
         : {}),
     },
-    body: JSON.stringify({ chapter, numQuestions, numNumbers }),
+    // FIX: Added 'book' to the payload here
+    body: JSON.stringify({ book, chapter, numQuestions, numNumbers }),
   });
 
   if (!res.ok) {

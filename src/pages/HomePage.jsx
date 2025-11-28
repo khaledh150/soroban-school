@@ -15,7 +15,7 @@ function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 }
 
-// English Titles (Updated for Book 1)
+// English Titles
 const titleMap = {
   1: [
     "Lower",
@@ -36,7 +36,29 @@ const titleMap = {
     "Mix Five buddy",
     "Mix Five buddy 2 digit"
   ],
-  2: ["", ""],
+  2: [
+    "Ten buddy +9",
+    "Ten buddy +8",
+    "Ten buddy +7",
+    "Ten buddy +6",
+    "Ten buddy +5",
+    "Ten buddy +4",
+    "Ten buddy +3",
+    "Ten buddy +2",
+    "Ten buddy +1",
+    "Ten buddy (+)",
+    "Ten buddy -9",
+    "Ten buddy -8",
+    "Ten buddy -7",
+    "Ten buddy -6",
+    "Ten buddy -5",
+    "Ten buddy -4",
+    "Ten buddy -3",
+    "Ten buddy -2",
+    "Ten buddy -1",
+    "Ten buddy (-)",
+    "Mix Ten buddy"
+  ],
 };
 
 const bookIcons = [
@@ -91,16 +113,20 @@ function HomePage() {
   }
 
   const getLevelTitles = (levelIndex) => {
-    return lang === 'th'
-      ? (chapterTitlesTH[levelIndex + 1] || [])
+    // Fallback to English titleMap for Book 2 if Thai translations missing
+    return lang === 'th' && chapterTitlesTH[levelIndex + 1]
+      ? chapterTitlesTH[levelIndex + 1]
       : (titleMap[levelIndex + 1] || []);
   };
 
   useEffect(() => {
     const initialLevels = [];
     for (let i = 1; i <= 5; i++) {
-      // Book 1 has 17 chapters, others default to 5
-      const nCh = i === 1 ? 17 : 5;
+      // Book 1 has 17 chapters, Book 2 has 21 chapters, others default to 5
+      let nCh = 5;
+      if (i === 1) nCh = 17;
+      if (i === 2) nCh = 21;
+
       initialLevels.push({
         name: "Book " + i,
         chapters: Array.from({ length: nCh }, (_, j) => ({
@@ -280,7 +306,6 @@ function HomePage() {
 
   function renderTop() {
     if (!showingChapter || !levels.length) {
-      // Nickname removed, generic welcome
       const namePart = "Welcome to Soroban for School!";
       const subtitle = "Choose your Soroban book below, or enjoy the slideshow while you decide.";
 
@@ -355,7 +380,7 @@ function HomePage() {
                className="w-full h-60 md:h-80 object-cover"
                onContextMenu={(e) => e.preventDefault()}
                onError={(e) => {
-                 if (chapterNum > 18) return; 
+                 if (chapterNum > 21) return; // adjusted max chapter check
                  if (!e.target._tries) e.target._tries=0;
                  e.target._tries++;
                  if(e.target._tries >= 3) alert(lang==='th'?"ไม่พบวิดีโอ":"Video unavailable");
@@ -485,8 +510,6 @@ function HomePage() {
           >
             ×
           </button>
-
-          {/* Nickname input removed */}
 
           <div className="flex items-center justify-between mt-4">
             <label className="font-semibold mr-2 text-slate-700">{t.fontSize}</label>
