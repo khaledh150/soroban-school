@@ -172,7 +172,7 @@ export default function QuizPage() {
   // --- SPEECH (DICTATION) ---
   const speakText = (text, type = 'number') => {
     if (!settings.dictation || settings.mute || !isMounted.current) return;
-    
+
     window.speechSynthesis.cancel();
 
     let spokenText = text;
@@ -181,17 +181,77 @@ export default function QuizPage() {
         spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
     } else if (lang === 'th') {
         if (type === 'op') {
-            spokenText = text.replace('+', 'บวก ').replace('-', 'ลบ '); 
+            spokenText = text.replace('+', 'บวก ').replace('-', 'ลบ ');
         }
+        // Replace underscore with "ช่องว่าง" (blank) in Thai
+        spokenText = spokenText.replace(/_/g, 'ช่องว่าง');
+        // Replace "?" with "เท่ากับ" (equals) in Thai
+        spokenText = spokenText.replace(/\?/g, 'เท่ากับ');
+        // Replace "×" with "คูณ" (times) in Thai
+        spokenText = spokenText.replace(/×/g, 'คูณ');
+        // Replace "=" with "เท่ากับ" (equals) in Thai
+        spokenText = spokenText.replace(/=/g, 'เท่ากับ');
     } else {
         if (type === 'op') {
             spokenText = text.replace('+', 'Plus ').replace('-', 'Minus ');
         }
+        // Replace underscore with "blank" in English
+        spokenText = spokenText.replace(/_/g, 'blank');
+        // Replace "?" with "equals" in English
+        spokenText = spokenText.replace(/\?/g, 'equals');
+        // Replace "×" with "times" in English
+        spokenText = spokenText.replace(/×/g, 'times');
+        // Replace "=" with "equals" in English
+        spokenText = spokenText.replace(/=/g, 'equals');
     }
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.rate = 1.1;
-    utterance.lang = lang === 'th' ? 'th-TH' : 'en-US'; 
+    utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Speech with callback when complete (for blank questions)
+  const speakTextWithCallback = (text, type = 'number', onEnd) => {
+    if (!settings.dictation || settings.mute || !isMounted.current) {
+      onEnd && onEnd();
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    let spokenText = text;
+
+    if (text === 'equals') {
+        spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
+    } else if (lang === 'th') {
+        if (type === 'op') {
+            spokenText = text.replace('+', 'บวก ').replace('-', 'ลบ ');
+        }
+        spokenText = spokenText.replace(/_/g, 'ช่องว่าง');
+        spokenText = spokenText.replace(/\?/g, 'เท่ากับ');
+        spokenText = spokenText.replace(/×/g, 'คูณ');
+        spokenText = spokenText.replace(/=/g, 'เท่ากับ');
+    } else {
+        if (type === 'op') {
+            spokenText = text.replace('+', 'Plus ').replace('-', 'Minus ');
+        }
+        spokenText = spokenText.replace(/_/g, 'blank');
+        spokenText = spokenText.replace(/\?/g, 'equals');
+        spokenText = spokenText.replace(/×/g, 'times');
+        spokenText = spokenText.replace(/=/g, 'equals');
+    }
+
+    const utterance = new SpeechSynthesisUtterance(spokenText);
+    utterance.rate = 1.1;
+    utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
+    utterance.onend = () => {
+      onEnd && onEnd();
+    };
+    utterance.onerror = () => {
+      onEnd && onEnd();
+    };
 
     window.speechSynthesis.speak(utterance);
   };
@@ -308,6 +368,7 @@ export default function QuizPage() {
   const flashQuestionTokens = (questionString, cb) => {
     if (gameState.current.flashTokenTimer) clearTimeout(gameState.current.flashTokenTimer);
     const tokens = parseQuestionToTokens(questionString);
+    const hasBlank = questionString.includes('_');
     let idx = 0;
     setInputLocked(true);
     function showNext() {
@@ -327,27 +388,43 @@ export default function QuizPage() {
               <span>{tokens[idx].val}</span>
             </div>
           );
-          textForSpeech = `${tokens[idx].op} ${tokens[idx].val}`; 
+          textForSpeech = `${tokens[idx].op} ${tokens[idx].val}`;
           typeForSpeech = "op";
         }
         setFlashContent(content);
         playSound("tick");
-        speakText(textForSpeech, typeForSpeech);
-        const delay = settings.flashSpeed * 1000;
-        
-        if (idx === tokens.length - 1) {
-           gameState.current.flashTokenTimer = setTimeout(() => {
+
+        // For questions with blanks, use speech synthesis onend to wait for dictation
+        if (hasBlank && settings.dictation && !settings.mute) {
+          speakTextWithCallback(textForSpeech, typeForSpeech, () => {
             if (!isMounted.current) return;
-            setFlashContent(<div className="flash-qmark">?</div>);
-            speakText("equals"); 
-            setInputLocked(false);
-            cb && cb();
-          }, delay);
+            if (idx === tokens.length - 1) {
+              // For blank questions, don't show extra "?" - go straight to input
+              setInputLocked(false);
+              cb && cb();
+            } else {
+              idx++;
+              showNext();
+            }
+          });
         } else {
-          gameState.current.flashTokenTimer = setTimeout(() => {
-            idx++;
-            showNext();
-          }, delay);
+          speakText(textForSpeech, typeForSpeech);
+          const delay = settings.flashSpeed * 1000;
+
+          if (idx === tokens.length - 1) {
+             gameState.current.flashTokenTimer = setTimeout(() => {
+              if (!isMounted.current) return;
+              setFlashContent(<div className="flash-qmark">?</div>);
+              speakText("equals");
+              setInputLocked(false);
+              cb && cb();
+            }, delay);
+          } else {
+            gameState.current.flashTokenTimer = setTimeout(() => {
+              idx++;
+              showNext();
+            }, delay);
+          }
         }
       }
     }
@@ -365,9 +442,12 @@ export default function QuizPage() {
     if (settings.flashEnabled) {
       flashQuestionTokens(q.q, () => { setInputLocked(false); });
     } else {
+      // For Book 3 multiplication questions, handle display differently
+      const hasBlank = q.q.includes('_'); // Questions like "3 × _ = 9"
+      const isMultiplication = q.q.includes('×');
       setFlashContent(
         <div className="static-question">
-            {q.q} = <span style={{color: '#ef4444'}}>?</span>
+            {q.q} {!isMultiplication && <>=</>} {!hasBlank && <span style={{color: '#ef4444'}}>?</span>}
         </div>
       );
       setInputLocked(false);
@@ -629,6 +709,77 @@ export default function QuizPage() {
             .ready-go-text { font-size: clamp(10rem, 55vw, 25rem); line-height: 1; }
             .ready-go-text.word-mode { font-size: clamp(6rem, 25vw, 12rem); }
         }
+
+        /* === RESULTS GRID === */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 5px;
+        }
+        .result-card {
+            background: #f8faff;
+            border-radius: 12px;
+            padding: 10px;
+            border: 2px solid #e0e7ff;
+            transition: transform 0.1s;
+        }
+        .result-card.correct { border-color: #86efac; background: #f0fdf4; }
+        .result-card.wrong { border-color: #fca5a5; background: #fef2f2; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .result-qnum {
+            background: #668cff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .result-question {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4d79ff;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+        .result-answers {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .your-ans {
+            font-weight: 700;
+            color: #22c55e;
+            font-size: 1rem;
+        }
+        .your-ans.wrong-ans { color: #ef4444; text-decoration: line-through; }
+        .correct-ans {
+            color: #22c55e;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .mark { font-size: 1rem; }
+
+        @media (max-width: 400px) {
+            .results-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .result-card { padding: 8px; }
+            .result-question { font-size: 0.8rem; }
+        }
+        @media (min-width: 600px) {
+            .results-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 800px) {
+            .results-grid { grid-template-columns: repeat(4, 1fr); }
+        }
       `}</style>
 
       {/* Audio & Effects */}
@@ -753,13 +904,19 @@ export default function QuizPage() {
                 <h2 style={{color: view==='timeup'?'#fd90d7':'#4d79ff', textAlign:'center', fontSize:'2rem', fontWeight:'800'}}>
                     {view === 'timeup' ? t.timesUp : (scoreText.includes(`/${gameState.current.questions.length}`) && scoreText.startsWith(`You scored ${gameState.current.questions.length}`) ? t.perfect : t.results)}
                 </h2>
-                <div className="results-row" style={{width:'100%', overflowY:'auto', maxHeight:'200px'}}>
+                <div className="results-grid">
                     {resultsData.map((a, i) => (
-                         <div className="result-item" key={i}>
-                            <div className='question-text'>Q{i + 1}: {a.question}</div>
-                            <div className='your-answer'>
+                         <div className={`result-card ${a.user === a.correct ? 'correct' : 'wrong'}`} key={i}>
+                            <div className='result-header'>
+                                <span className='result-qnum'>Q{i + 1}</span>
                                 <span className='mark'>{a.user === a.correct ? "✅" : "❌"}</span>
-                                <span>Your: {a.user}</span>
+                            </div>
+                            <div className='result-question'>{a.question}</div>
+                            <div className='result-answers'>
+                                <span className={`your-ans ${a.user === a.correct ? '' : 'wrong-ans'}`}>{a.user}</span>
+                                {a.user !== a.correct && (
+                                    <span className='correct-ans'>({a.correct})</span>
+                                )}
                             </div>
                           </div>
                     ))}

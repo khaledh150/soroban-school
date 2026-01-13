@@ -546,7 +546,7 @@ function randomBook3Chapter9Multiply2(numQuestions = 10, numNumbers = 4): Questi
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -571,7 +571,7 @@ function randomBook3Chapter10Multiply3(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -596,7 +596,7 @@ function randomBook3Chapter11Multiply4(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -621,7 +621,7 @@ function randomBook3Chapter12Multiply5(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -646,7 +646,7 @@ function randomBook3Chapter13Multiply6(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -671,7 +671,7 @@ function randomBook3Chapter14Multiply7(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -696,7 +696,7 @@ function randomBook3Chapter15Multiply8(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -720,7 +720,7 @@ function randomBook3Chapter16Multiply9(numQuestions = 10, numNumbers = 4): Quest
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
@@ -745,7 +745,7 @@ function randomBook3Chapter17Multiply2To9(numQuestions = 10, numNumbers = 4): Qu
     let aText: string = "";
 
     if (Math.random() < 0.5) {
-      qText = A.toString() + " × " + B.toString() + " =";
+      qText = A.toString() + " × " + B.toString();
       aText = D.toString();
     } else {
       qText = A.toString() + " × _ = " + D.toString();
