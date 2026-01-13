@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { generateQuestions } from "../api/questionApi";
 import SorobanBoard from "../components/quiz/SorobanBoard.jsx";
-import { useLanguage } from "../LanguageContext"; 
+import { useLanguage, chapterTitlesTH } from "../LanguageContext"; 
 
 // --- IMPORT SOUNDS ---
 import sound1 from "../assets/sounds/sound1.wav";
@@ -18,6 +18,71 @@ import losing from "../assets/sounds/losing-horn.wav";
 
 import "../components/quiz/soroban.css";
 import "../components/quiz/quiz.css";
+
+// English Titles (same as HomePage)
+const titleMap = {
+  1: [
+    "Lower",
+    "Lower 2 digit",
+    "Upper",
+    "Mix lower upper",
+    "Mix lower upper 2 digit",
+    "Five buddy +4",
+    "Five buddy +3",
+    "Five buddy +2",
+    "Five buddy +1",
+    "Five buddy (+)",
+    "Five buddy -4",
+    "Five buddy -3",
+    "Five buddy -2",
+    "Five buddy -1",
+    "Five buddy (-)",
+    "Mix Five buddy",
+    "Mix Five buddy 2 digit"
+  ],
+  2: [
+    "Ten buddy +9",
+    "Ten buddy +8",
+    "Ten buddy +7",
+    "Ten buddy +6",
+    "Ten buddy +5",
+    "Ten buddy +4",
+    "Ten buddy +3",
+    "Ten buddy +2",
+    "Ten buddy +1",
+    "Ten buddy (+)",
+    "Ten buddy -9",
+    "Ten buddy -8",
+    "Ten buddy -7",
+    "Ten buddy -6",
+    "Ten buddy -5",
+    "Ten buddy -4",
+    "Ten buddy -3",
+    "Ten buddy -2",
+    "Ten buddy -1",
+    "Ten buddy (-)",
+    "Mix Ten buddy"
+  ],
+  3: [
+    "Five & Ten buddy +9",
+    "Five & Ten buddy +8",
+    "Five & Ten buddy +7",
+    "Five & Ten buddy +6",
+    "Five & Ten buddy -9",
+    "Five & Ten buddy -8",
+    "Five & Ten buddy -7",
+    "Five & Ten buddy -6",
+    "Multiplication Table of 2",
+    "Multiplication Table of 3",
+    "Multiplication Table of 4",
+    "Multiplication Table of 5",
+    "Multiplication Table of 6",
+    "Multiplication Table of 7",
+    "Multiplication Table of 8",
+    "Multiplication Table of 9",
+    "Multiplication Table of 2 to 9"
+  ],
+};
 
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -35,6 +100,15 @@ export default function QuizPage() {
   const currentLevel = Math.max(1, Math.min(10, levelParam));
   // Allow up to 21 chapters for Book 2
   const currentChapter = Math.max(1, Math.min(21, chapterParam));
+
+  // Get chapter title based on language
+  const getChapterTitle = () => {
+    const chapterIndex = currentChapter - 1;
+    const titles = lang === 'th' && chapterTitlesTH[currentLevel]
+      ? chapterTitlesTH[currentLevel]
+      : (titleMap[currentLevel] || []);
+    return titles[chapterIndex] || `Ch. ${currentChapter}`;
+  };
 
   const [view, setView] = useState("start");
   const [questionNum, setQuestionNum] = useState(1);
@@ -470,11 +544,13 @@ export default function QuizPage() {
         
         /* UI Elements */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .top-bar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+        .chapter-title { font-size: 0.85rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #668cff 0%, #8b5cf6 100%); padding: 6px 14px; border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 50px); box-shadow: 0 2px 8px rgba(102, 140, 255, 0.3); }
         .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .bottom-controls { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 10px; }
-        .icon-btn { background: #b4d7ff; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.1); transition: transform 0.1s; }
+        .icon-btn { background: #b4d7ff; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.1); transition: transform 0.1s; flex-shrink: 0; }
         .icon-btn:active { transform: scale(0.95); background: #fd90d7; color: #fff; }
-        .back-pill { background: #b4d7ff; color: #3e366b; border: none; border-radius: 999px; padding: 0.5em 1.2em; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5em; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+        .back-pill { background: #b4d7ff; color: #3e366b; border: none; border-radius: 50%; width: 42px; height: 42px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 8px rgba(0,0,0,0.1); flex-shrink: 0; }
         .back-pill:active { transform: scale(0.95); background: #fd90d7; color: #fff; }
         .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
         .num-btn { background: #fff; border: 2px solid #e0e0e0; border-radius: 16px; font-size: 1.6rem; font-weight: 800; color: #4d79ff; padding: 15px 0; cursor: pointer; box-shadow: 0 2px 0px rgba(0,0,0,0.05); transition: background 0.1s; }
@@ -513,6 +589,8 @@ export default function QuizPage() {
             .status-row { font-size: 0.85rem; margin-bottom: 2px; }
             .top-bar { margin-bottom: 2px; }
             .icon-btn { width: 30px; height: 30px; font-size: 0.9rem; }
+            .back-pill { width: 30px; height: 30px; }
+            .chapter-title { font-size: 0.65rem; max-width: 110px; padding: 4px 10px; border-radius: 8px; }
 
             /* FIX: Settings overflowing */
             .settings-card { padding: 0.5rem 1rem; gap: 0.5rem; max-height: 90vh; overflow-y: auto; width: 80vw; max-width: 400px; }
@@ -524,10 +602,13 @@ export default function QuizPage() {
         }
 
         /* === PORTRAIT MODE (COMPACT + HUGE NUMBERS) === */
-        @media (max-aspect-ratio: 1/1) { 
-            .soroban-container { display: none !important; } 
-            .quiz-panel { width: 100vw !important; max-width: 100vw !important; border-radius: 0; padding: 0.5rem; } 
-            
+        @media (max-aspect-ratio: 1/1) {
+            .soroban-container { display: none !important; }
+            .quiz-panel { width: 100vw !important; max-width: 100vw !important; border-radius: 0; padding: 0.5rem; }
+
+            /* Chapter title in portrait - more space available */
+            .chapter-title { font-size: 0.85rem; max-width: calc(100vw - 200px); }
+
             /* Squeezed Numpad */
             .bottom-controls { gap: 4px; margin-top: auto; } 
             .numpad-grid { gap: 4px; height: auto; }
@@ -584,7 +665,10 @@ export default function QuizPage() {
       {view === 'quiz' && (
         <div className="quiz-panel">
           <div className="top-bar">
-              <button className="back-pill" onClick={goHome}><span>←</span> {t.backHome}</button>
+              <div className="top-bar-left">
+                  <button className="back-pill" onClick={goHome}><span>←</span></button>
+                  <span className="chapter-title">{getChapterTitle()}</span>
+              </div>
               <div style={{display:'flex', gap:'8px'}}>
                   <button className="icon-btn" onClick={() => setView("settings")}>⚙️</button>
                   <button className="icon-btn" onClick={resetBoard}>↻</button>

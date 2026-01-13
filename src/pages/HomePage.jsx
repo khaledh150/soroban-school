@@ -59,6 +59,25 @@ const titleMap = {
     "Ten buddy (-)",
     "Mix Ten buddy"
   ],
+  3: [
+    "Five & Ten buddy +9",
+    "Five & Ten buddy +8",
+    "Five & Ten buddy +7",
+    "Five & Ten buddy +6",
+    "Five & Ten buddy -9",
+    "Five & Ten buddy -8",
+    "Five & Ten buddy -7",
+    "Five & Ten buddy -6",
+    "Multiplication Table of 2",
+    "Multiplication Table of 3",
+    "Multiplication Table of 4",
+    "Multiplication Table of 5",
+    "Multiplication Table of 6",
+    "Multiplication Table of 7",
+    "Multiplication Table of 8",
+    "Multiplication Table of 9",
+    "Multiplication Table of 2 to 9"
+  ],
 };
 
 const bookIcons = [
@@ -122,15 +141,16 @@ function HomePage() {
   useEffect(() => {
     const initialLevels = [];
     for (let i = 1; i <= 5; i++) {
-      // Book 1 has 17 chapters, Book 2 has 21 chapters, others default to 5
+      // Book 1 has 17 chapters, Book 2 has 21 chapters, Book 3 has 17 chapters, others default to 5
       let nCh = 5;
       if (i === 1) nCh = 17;
       if (i === 2) nCh = 21;
+      if (i === 3) nCh = 17;
 
       initialLevels.push({
         name: "Book " + i,
         chapters: Array.from({ length: nCh }, (_, j) => ({
-          title: `Ch. ${j + 1}`, 
+          title: `Ch. ${j + 1}`,
           completed: false,
           exerciseCompleted: false,
           unlocked: true,
