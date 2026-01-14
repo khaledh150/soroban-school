@@ -88,8 +88,8 @@ const titleMap = {
     "Ten buddy +8 2 digit", "Ten buddy +7 2 digit", "Ten buddy +6 2 digit", "Ten buddy +5 2 digit", "Ten buddy +4 2 digit", 
     "Ten buddy +3 2 digit", "Ten buddy +2 2 digit", "Ten buddy +1 2 digit", "Ten buddy -9 2 digit", "Ten buddy -8 2 digit", 
     "Ten buddy -7 2 digit", "Ten buddy -6 2 digit", "Ten buddy -5 2 digit", "Ten buddy -4 2 digit", "Ten buddy -3 2 digit", 
-    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five&Ten buddy +9 2 digit", "Five&Ten buddy +8 2 digit", "Five&Ten buddy +7 2 digit", 
-    "Five&Ten buddy +6 2 digit", "Five&Ten buddy -9 2 digit", "Five&Ten buddy -8 2 digit", "Five&Ten buddy -7 2 digit", "Five&Ten buddy -6 2 digit"
+    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five & Ten Buddy +9 2 digit", "Five & Ten Buddy +8 2 digit", "Five & Ten Buddy +7 2 digit",
+    "Five & Ten Buddy +6 2 digit", "Five & Ten Buddy -9 2 digit", "Five & Ten Buddy -8 2 digit", "Five & Ten Buddy -7 2 digit", "Five & Ten Buddy -6 2 digit"
   ]
 };
 
@@ -689,7 +689,7 @@ export default function QuizPage() {
         /* UI Elements */
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .top-bar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-        .chapter-title { font-size: 0.85rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, #668cff 0%, #8b5cf6 100%); padding: 6px 14px; border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 50px); box-shadow: 0 2px 8px rgba(102, 140, 255, 0.3); }
+        .chapter-title { font-size: 0.85rem; font-weight: 700; color: #4a4a6a; background: linear-gradient(135deg, #e0e8ff 0%, #f0e6ff 100%); padding: 6px 14px; border-radius: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 50px); box-shadow: 0 2px 8px rgba(102, 140, 255, 0.15); }
         .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .bottom-controls { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 10px; }
         .icon-btn { background: #b4d7ff; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.1); transition: transform 0.1s; flex-shrink: 0; }

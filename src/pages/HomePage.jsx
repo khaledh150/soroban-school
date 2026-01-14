@@ -84,8 +84,8 @@ const titleMap = {
     "Ten buddy +8 2 digit", "Ten buddy +7 2 digit", "Ten buddy +6 2 digit", "Ten buddy +5 2 digit", "Ten buddy +4 2 digit", 
     "Ten buddy +3 2 digit", "Ten buddy +2 2 digit", "Ten buddy +1 2 digit", "Ten buddy -9 2 digit", "Ten buddy -8 2 digit", 
     "Ten buddy -7 2 digit", "Ten buddy -6 2 digit", "Ten buddy -5 2 digit", "Ten buddy -4 2 digit", "Ten buddy -3 2 digit", 
-    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five&Ten buddy +9 2 digit", "Five&Ten buddy +8 2 digit", "Five&Ten buddy +7 2 digit", 
-    "Five&Ten buddy +6 2 digit", "Five&Ten buddy -9 2 digit", "Five&Ten buddy -8 2 digit", "Five&Ten buddy -7 2 digit", "Five&Ten buddy -6 2 digit"
+    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five & Ten Buddy +9 2 digit", "Five & Ten Buddy +8 2 digit", "Five & Ten Buddy +7 2 digit",
+    "Five & Ten Buddy +6 2 digit", "Five & Ten Buddy -9 2 digit", "Five & Ten Buddy -8 2 digit", "Five & Ten Buddy -7 2 digit", "Five & Ten Buddy -6 2 digit"
   ]
 };
 
