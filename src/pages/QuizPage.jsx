@@ -378,9 +378,14 @@ export default function QuizPage() {
         let content;
         let textForSpeech = "";
         let typeForSpeech = "number";
+        const tokenVal = tokens[idx].val || '';
+        const isMultiplicationToken = tokenVal.includes('×') || tokenVal.includes('_');
+
         if (tokens[idx].type === "first") {
-          content = <div className="flash-token">{tokens[idx].val}</div>;
-          textForSpeech = tokens[idx].val;
+          // Use responsive class for multiplication/blank questions
+          const tokenClass = isMultiplicationToken ? "flash-multiplication" : "flash-token";
+          content = <div className={tokenClass}>{tokenVal}</div>;
+          textForSpeech = tokenVal;
         } else {
           content = (
             <div className="flash-token">
@@ -445,8 +450,9 @@ export default function QuizPage() {
       // For Book 3 multiplication questions, handle display differently
       const hasBlank = q.q.includes('_'); // Questions like "3 × _ = 9"
       const isMultiplication = q.q.includes('×');
+      const questionClass = isMultiplication ? "static-multiplication" : "static-question";
       setFlashContent(
-        <div className="static-question">
+        <div className={questionClass}>
             {q.q} {!isMultiplication && <>=</>} {!hasBlank && <span style={{color: '#ef4444'}}>?</span>}
         </div>
       );
@@ -612,6 +618,25 @@ export default function QuizPage() {
         .flash-op { margin-right: 0.1em; color: #aaa; font-size: 0.6em; }
         .flash-qmark { font-size: clamp(8rem, 20vw, 15rem); color: #ef4444; font-weight: 900; }
         .static-question { font-size: clamp(3rem, 8vw, 6rem); font-weight: bold; color: #4d79ff; }
+
+        /* Multiplication/Blank questions - responsive sizing */
+        .flash-multiplication {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            color: #4d79ff;
+            line-height: 1.2;
+            max-width: 95%;
+            word-break: keep-all;
+            white-space: nowrap;
+        }
+        .static-multiplication {
+            font-size: clamp(2rem, 7vw, 4.5rem);
+            font-weight: bold;
+            color: #4d79ff;
+            max-width: 95%;
+            word-break: keep-all;
+            white-space: nowrap;
+        }
         
         /* Feedback & Answer */
         .feedback-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -662,7 +687,11 @@ export default function QuizPage() {
             .flash-qmark { font-size: 25vh; }
             .feedback-icon { font-size: 25vh; }
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
-            
+
+            /* Multiplication questions in landscape - fit in narrow panel */
+            .flash-multiplication { font-size: clamp(1.5rem, 12vw, 3rem); line-height: 1.1; }
+            .static-multiplication { font-size: clamp(1.3rem, 10vw, 2.5rem); }
+
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
             
@@ -698,10 +727,14 @@ export default function QuizPage() {
             .send-btn { font-size: 1.2rem; border-radius: 12px; }
             
             /* MASSIVE Numbers */
-            .flash-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; }
-            .flash-token { font-size: clamp(10rem, 55vw, 25rem); line-height: 1; } 
-            .flash-qmark { font-size: clamp(12rem, 60vw, 30rem); } 
-            .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); } 
+            .flash-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; }
+            .flash-token { font-size: clamp(10rem, 55vw, 25rem); line-height: 1; }
+            .flash-qmark { font-size: clamp(12rem, 60vw, 30rem); }
+            .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
+
+            /* Multiplication questions in portrait - large but fits screen */
+            .flash-multiplication { font-size: clamp(3rem, 18vw, 8rem); line-height: 1.1; max-width: 98vw; }
+            .static-multiplication { font-size: clamp(2.5rem, 15vw, 7rem); max-width: 98vw; } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
