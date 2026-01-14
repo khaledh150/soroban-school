@@ -379,11 +379,17 @@ export default function QuizPage() {
         let textForSpeech = "";
         let typeForSpeech = "number";
         const tokenVal = tokens[idx].val || '';
-        const isMultiplicationToken = tokenVal.includes('×') || tokenVal.includes('_');
+        const hasBlankInToken = tokenVal.includes('_');
+        const isMultiplicationToken = tokenVal.includes('×');
 
         if (tokens[idx].type === "first") {
-          // Use responsive class for multiplication/blank questions
-          const tokenClass = isMultiplicationToken ? "flash-multiplication" : "flash-token";
+          // Use different classes: blank questions smaller, multiplication larger
+          let tokenClass = "flash-token";
+          if (hasBlankInToken) {
+            tokenClass = "flash-blank";
+          } else if (isMultiplicationToken) {
+            tokenClass = "flash-multiplication";
+          }
           content = <div className={tokenClass}>{tokenVal}</div>;
           textForSpeech = tokenVal;
         } else {
@@ -450,7 +456,13 @@ export default function QuizPage() {
       // For Book 3 multiplication questions, handle display differently
       const hasBlank = q.q.includes('_'); // Questions like "3 × _ = 9"
       const isMultiplication = q.q.includes('×');
-      const questionClass = isMultiplication ? "static-multiplication" : "static-question";
+      // Use different classes: blank questions smaller, multiplication larger
+      let questionClass = "static-question";
+      if (hasBlank) {
+        questionClass = "static-blank";
+      } else if (isMultiplication) {
+        questionClass = "static-multiplication";
+      }
       setFlashContent(
         <div className={questionClass}>
             {q.q} {!isMultiplication && <>=</>} {!hasBlank && <span style={{color: '#ef4444'}}>?</span>}
@@ -619,9 +631,9 @@ export default function QuizPage() {
         .flash-qmark { font-size: clamp(8rem, 20vw, 15rem); color: #ef4444; font-weight: 900; }
         .static-question { font-size: clamp(3rem, 8vw, 6rem); font-weight: bold; color: #4d79ff; }
 
-        /* Multiplication/Blank questions - responsive sizing */
+        /* Multiplication questions (3 × 5) - large sizing */
         .flash-multiplication {
-            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-size: clamp(4rem, 12vw, 8rem);
             font-weight: 900;
             color: #4d79ff;
             line-height: 1.2;
@@ -630,6 +642,24 @@ export default function QuizPage() {
             white-space: nowrap;
         }
         .static-multiplication {
+            font-size: clamp(3.5rem, 10vw, 7rem);
+            font-weight: bold;
+            color: #4d79ff;
+            max-width: 95%;
+            word-break: keep-all;
+            white-space: nowrap;
+        }
+        /* Blank questions (3 × _ = 9) - smaller to fit */
+        .flash-blank {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 900;
+            color: #4d79ff;
+            line-height: 1.2;
+            max-width: 95%;
+            word-break: keep-all;
+            white-space: nowrap;
+        }
+        .static-blank {
             font-size: clamp(2rem, 7vw, 4.5rem);
             font-weight: bold;
             color: #4d79ff;
@@ -689,8 +719,10 @@ export default function QuizPage() {
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
 
             /* Multiplication questions in landscape - fit in narrow panel */
-            .flash-multiplication { font-size: clamp(1.5rem, 12vw, 3rem); line-height: 1.1; }
-            .static-multiplication { font-size: clamp(1.3rem, 10vw, 2.5rem); }
+            .flash-multiplication { font-size: clamp(2rem, 14vw, 4rem); line-height: 1.1; }
+            .static-multiplication { font-size: clamp(1.8rem, 12vw, 3.5rem); }
+            .flash-blank { font-size: clamp(1.5rem, 10vw, 2.5rem); line-height: 1.1; }
+            .static-blank { font-size: clamp(1.3rem, 8vw, 2rem); }
 
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
@@ -733,8 +765,11 @@ export default function QuizPage() {
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
             /* Multiplication questions in portrait - large but fits screen */
-            .flash-multiplication { font-size: clamp(3rem, 18vw, 8rem); line-height: 1.1; max-width: 98vw; }
-            .static-multiplication { font-size: clamp(2.5rem, 15vw, 7rem); max-width: 98vw; } 
+            .flash-multiplication { font-size: clamp(6rem, 36vw, 16rem); line-height: 1.1; max-width: 98vw; }
+            .static-multiplication { font-size: clamp(5rem, 30vw, 14rem); max-width: 98vw; }
+            /* Blank questions in portrait - smaller to fit */
+            .flash-blank { font-size: clamp(3rem, 18vw, 8rem); line-height: 1.1; max-width: 98vw; }
+            .static-blank { font-size: clamp(2.5rem, 15vw, 7rem); max-width: 98vw; } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
