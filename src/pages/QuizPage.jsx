@@ -82,6 +82,15 @@ const titleMap = {
     "Multiplication Table of 9",
     "Multiplication Table of 2 to 9"
   ],
+  4: [
+    "lower upper 2 digit", "Five buddy +4 2 digit", "Five buddy +3 2 digit", "Five buddy +2 2 digit", "Five buddy +1 2 digit", 
+    "Five buddy -4 2 digit", "Five buddy -3 2 digit", "Five buddy -2 2 digit", "Five buddy -1 2 digit", "Ten buddy +9 2 digit", 
+    "Ten buddy +8 2 digit", "Ten buddy +7 2 digit", "Ten buddy +6 2 digit", "Ten buddy +5 2 digit", "Ten buddy +4 2 digit", 
+    "Ten buddy +3 2 digit", "Ten buddy +2 2 digit", "Ten buddy +1 2 digit", "Ten buddy -9 2 digit", "Ten buddy -8 2 digit", 
+    "Ten buddy -7 2 digit", "Ten buddy -6 2 digit", "Ten buddy -5 2 digit", "Ten buddy -4 2 digit", "Ten buddy -3 2 digit", 
+    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five&Ten buddy +9 2 digit", "Five&Ten buddy +8 2 digit", "Five&Ten buddy +7 2 digit", 
+    "Five&Ten buddy +6 2 digit", "Five&Ten buddy -9 2 digit", "Five&Ten buddy -8 2 digit", "Five&Ten buddy -7 2 digit", "Five&Ten buddy -6 2 digit"
+  ]
 };
 
 function isIOS() {
@@ -718,9 +727,9 @@ export default function QuizPage() {
             .feedback-icon { font-size: 25vh; }
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
 
-            /* Multiplication questions in landscape - fit in narrow panel */
-            .flash-multiplication { font-size: clamp(2rem, 14vw, 4rem); line-height: 1.1; }
-            .static-multiplication { font-size: clamp(1.8rem, 12vw, 3.5rem); }
+            /* Multiplication questions in landscape - 2x size */
+            .flash-multiplication { font-size: clamp(4rem, 28vw, 8rem); line-height: 1.1; }
+            .static-multiplication { font-size: clamp(3.6rem, 24vw, 7rem); }
             .flash-blank { font-size: clamp(1.5rem, 10vw, 2.5rem); line-height: 1.1; }
             .static-blank { font-size: clamp(1.3rem, 8vw, 2rem); }
 
@@ -764,9 +773,9 @@ export default function QuizPage() {
             .flash-qmark { font-size: clamp(12rem, 60vw, 30rem); }
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
-            /* Multiplication questions in portrait - large but fits screen */
-            .flash-multiplication { font-size: clamp(6rem, 36vw, 16rem); line-height: 1.1; max-width: 98vw; }
-            .static-multiplication { font-size: clamp(5rem, 30vw, 14rem); max-width: 98vw; }
+            /* Multiplication questions in portrait - 2x size */
+            .flash-multiplication { font-size: clamp(12rem, 72vw, 32rem); line-height: 1.1; max-width: 98vw; }
+            .static-multiplication { font-size: clamp(10rem, 60vw, 28rem); max-width: 98vw; }
             /* Blank questions in portrait - smaller to fit */
             .flash-blank { font-size: clamp(3rem, 18vw, 8rem); line-height: 1.1; max-width: 98vw; }
             .static-blank { font-size: clamp(2.5rem, 15vw, 7rem); max-width: 98vw; } 

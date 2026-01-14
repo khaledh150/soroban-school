@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Question, GenFn, book1Generators } from "./book1.ts";
 import { book2Generators } from "./book2.ts";
 import { book3Generators } from "./book3.ts";
+import { book4Generators } from "./book4.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,10 @@ function getGenerator(book: number, chapter: number): GenFn {
 
   if (book === 3) {
     return book3Generators[chapter] || defaultGenerator;
+  }
+
+  if (book === 4) {
+    return book4Generators[chapter] || defaultGenerator;
   }
 
   // For any other book number, default to Book 1

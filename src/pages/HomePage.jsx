@@ -77,7 +77,16 @@ const titleMap = {
     "Multiplication Table of 8",
     "Multiplication Table of 9",
     "Multiplication Table of 2 to 9"
-  ],
+],
+  4: [
+    "lower upper 2 digit", "Five buddy +4 2 digit", "Five buddy +3 2 digit", "Five buddy +2 2 digit", "Five buddy +1 2 digit", 
+    "Five buddy -4 2 digit", "Five buddy -3 2 digit", "Five buddy -2 2 digit", "Five buddy -1 2 digit", "Ten buddy +9 2 digit", 
+    "Ten buddy +8 2 digit", "Ten buddy +7 2 digit", "Ten buddy +6 2 digit", "Ten buddy +5 2 digit", "Ten buddy +4 2 digit", 
+    "Ten buddy +3 2 digit", "Ten buddy +2 2 digit", "Ten buddy +1 2 digit", "Ten buddy -9 2 digit", "Ten buddy -8 2 digit", 
+    "Ten buddy -7 2 digit", "Ten buddy -6 2 digit", "Ten buddy -5 2 digit", "Ten buddy -4 2 digit", "Ten buddy -3 2 digit", 
+    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five&Ten buddy +9 2 digit", "Five&Ten buddy +8 2 digit", "Five&Ten buddy +7 2 digit", 
+    "Five&Ten buddy +6 2 digit", "Five&Ten buddy -9 2 digit", "Five&Ten buddy -8 2 digit", "Five&Ten buddy -7 2 digit", "Five&Ten buddy -6 2 digit"
+  ]
 };
 
 const bookIcons = [
@@ -141,11 +150,12 @@ function HomePage() {
   useEffect(() => {
     const initialLevels = [];
     for (let i = 1; i <= 5; i++) {
-      // Book 1 has 17 chapters, Book 2 has 21 chapters, Book 3 has 17 chapters, others default to 5
+      // Book 1 has 17 chapters, Book 2 has 21 chapters, Book 3 has 17 chapters, Book 4 has 35 chapters, others default to 5
       let nCh = 5;
       if (i === 1) nCh = 17;
       if (i === 2) nCh = 21;
       if (i === 3) nCh = 17;
+      if (i === 4) nCh = 35;
 
       initialLevels.push({
         name: "Book " + i,
