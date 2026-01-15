@@ -446,18 +446,24 @@ export default function QuizPage() {
         const isMultiplicationToken = tokenVal.includes('×') || tokenVal.includes('÷');
 
         if (tokens[idx].type === "first") {
-          // Use different classes: blank questions smaller, multiplication/division larger
+          // Use different classes: blank questions smaller, multiplication/division larger, decimals dedicated
           let tokenClass = "flash-token";
+          const isDecimalToken = tokenVal.includes('.');
           if (hasBlankInToken) {
             tokenClass = `flash-blank ${getQuestionSizeClass(tokenVal)}`;
           } else if (isMultiplicationToken) {
             tokenClass = `flash-multiplication ${getQuestionSizeClass(tokenVal)}`;
+          } else if (isDecimalToken) {
+            tokenClass = "flash-decimal";
           }
           content = <div className={tokenClass}>{tokenVal}</div>;
           textForSpeech = tokenVal;
         } else {
+          // Check if this token has a decimal value
+          const isDecimalVal = tokens[idx].val && tokens[idx].val.includes('.');
+          const tokenClass = isDecimalVal ? "flash-decimal" : "flash-token";
           content = (
-            <div className="flash-token">
+            <div className={tokenClass}>
               <span className="flash-op">{tokens[idx].op}</span>
               <span>{tokens[idx].val}</span>
             </div>
@@ -702,6 +708,9 @@ export default function QuizPage() {
         .flash-qmark { font-size: clamp(8rem, 20vw, 15rem); color: #ef4444; font-weight: 900; }
         .static-question { font-size: clamp(3rem, 8vw, 6rem); font-weight: bold; color: #4d79ff; }
 
+        /* Decimal questions - dedicated size (desktop) */
+        .flash-decimal { font-size: 6rem; font-weight: 900; color: #4d79ff; line-height: 1; white-space: nowrap; }
+
         /* Multiplication & Blank questions - base styles */
         .flash-multiplication, .static-multiplication, .flash-blank, .static-blank {
             font-weight: 900;
@@ -789,6 +798,9 @@ export default function QuizPage() {
             .flash-blank.size-l, .static-blank.size-l { font-size: 2.4rem; }
             .flash-blank.size-xl, .static-blank.size-xl { font-size: 1.8rem; }
 
+            /* Decimal questions in landscape - slightly smaller than desktop */
+            .flash-decimal { font-size: 5rem; }
+
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
             
@@ -839,7 +851,11 @@ export default function QuizPage() {
             .flash-blank.size-s, .static-blank.size-s { font-size: min(42vw, 14rem); }
             .flash-blank.size-m, .static-blank.size-m { font-size: min(32vw, 11rem); }
             .flash-blank.size-l, .static-blank.size-l { font-size: min(22vw, 8rem); }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(17vw, 6rem); } 
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(17vw, 6rem); }
+
+            /* Decimal questions in portrait - smaller to fit */
+            .flash-decimal { font-size: min(18vw, 5rem); }
+
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
