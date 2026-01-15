@@ -726,15 +726,15 @@ export default function QuizPage() {
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
 
             /* Multiplication questions in landscape - sized for 280px panel */
-            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: 2rem; }
-            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: 1.6rem; }
-            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 1.2rem; }
-            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 0.95rem; }
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: 4rem; }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: 3.2rem; }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 2.4rem; }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 1.9rem; }
 
-            .flash-blank.size-s, .static-blank.size-s { font-size: 1.7rem; }
-            .flash-blank.size-m, .static-blank.size-m { font-size: 1.35rem; }
-            .flash-blank.size-l, .static-blank.size-l { font-size: 1.05rem; }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: 0.85rem; }
+            .flash-blank.size-s, .static-blank.size-s { font-size: 3.4rem; }
+            .flash-blank.size-m, .static-blank.size-m { font-size: 2.7rem; }
+            .flash-blank.size-l, .static-blank.size-l { font-size: 2.1rem; }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: 1.7rem; }
 
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
@@ -777,16 +777,16 @@ export default function QuizPage() {
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
             /* Multiplication questions in portrait - sized to fit width */
-            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(15vw, 5rem); }
-            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(10vw, 4rem); }
-            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(7vw, 3rem); }
-            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(5.5vw, 2.2rem); }
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(30vw, 10rem); }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(20vw, 8rem); }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(14vw, 6rem); }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(11vw, 4.4rem); }
 
             /* Blank questions in portrait - sized to fit width */
-            .flash-blank.size-s, .static-blank.size-s { font-size: min(12vw, 4.5rem); }
-            .flash-blank.size-m, .static-blank.size-m { font-size: min(9vw, 3.5rem); }
-            .flash-blank.size-l, .static-blank.size-l { font-size: min(6.5vw, 2.6rem); }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(5vw, 2rem); } 
+            .flash-blank.size-s, .static-blank.size-s { font-size: min(24vw, 9rem); }
+            .flash-blank.size-m, .static-blank.size-m { font-size: min(18vw, 7rem); }
+            .flash-blank.size-l, .static-blank.size-l { font-size: min(13vw, 5.2rem); }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(10vw, 4rem); } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
