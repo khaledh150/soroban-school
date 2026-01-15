@@ -86,6 +86,13 @@ const titleMap = {
     "Ten buddy -7 2 digit", "Ten buddy -6 2 digit", "Ten buddy -5 2 digit", "Ten buddy -4 2 digit", "Ten buddy -3 2 digit", 
     "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five & Ten Buddy +9 2 digit", "Five & Ten Buddy +8 2 digit", "Five & Ten Buddy +7 2 digit",
     "Five & Ten Buddy +6 2 digit", "Five & Ten Buddy -9 2 digit", "Five & Ten Buddy -8 2 digit", "Five & Ten Buddy -7 2 digit", "Five & Ten Buddy -6 2 digit"
+  ],
+  5: [
+    "Lower Upper 2 Digit",
+    "2 Digit +-",
+    "Multiply 2 Digit",
+    "Multiply Missing Number",
+    "Five Buddy 2 Digit"
   ]
 };
 
