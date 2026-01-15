@@ -805,10 +805,10 @@ export default function QuizPage() {
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
             /* Multiplication questions in portrait - large, scaled by length */
-            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(45vw, 14rem); }
-            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(35vw, 11rem); }
-            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(25vw, 8rem); }
-            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(18vw, 6rem); }
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(22vw, 7rem); }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(17vw, 5.5rem); }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(12vw, 4rem); }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(9vw, 3rem); }
 
             /* Blank questions in portrait - large, scaled by length */
             .flash-blank.size-s, .static-blank.size-s { font-size: min(42vw, 14rem); }
