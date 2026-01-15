@@ -458,7 +458,12 @@ export default function QuizPage() {
           });
         } else {
           speakText(textForSpeech, typeForSpeech);
-          const delay = settings.flashSpeed * 1000;
+          // Add extra time for longer numbers (3+ digits need more time for dictation)
+          const digitCount = (tokens[idx].val || tokenVal).replace(/\D/g, '').length;
+          let delayMultiplier = 1;
+          if (digitCount >= 4) delayMultiplier = 2;
+          else if (digitCount >= 3) delayMultiplier = 1.5;
+          const delay = settings.flashSpeed * 1000 * delayMultiplier;
 
           if (idx === tokens.length - 1) {
              gameState.current.flashTokenTimer = setTimeout(() => {
@@ -749,10 +754,10 @@ export default function QuizPage() {
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
 
             /* Multiplication questions in landscape - large for 280px panel */
-            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: 6rem; }
-            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: 4.5rem; }
-            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 3.5rem; }
-            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 2.6rem; }
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: 4.5rem; }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: 3.5rem; }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 2.8rem; }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 2rem; }
 
             .flash-blank.size-s, .static-blank.size-s { font-size: 4.2rem; }
             .flash-blank.size-m, .static-blank.size-m { font-size: 3.2rem; }
@@ -800,10 +805,10 @@ export default function QuizPage() {
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
             /* Multiplication questions in portrait - large, scaled by length */
-            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(60vw, 20rem); }
-            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(45vw, 16rem); }
-            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(32vw, 12rem); }
-            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(24vw, 9rem); }
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(45vw, 14rem); }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(35vw, 11rem); }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(25vw, 8rem); }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(18vw, 6rem); }
 
             /* Blank questions in portrait - large, scaled by length */
             .flash-blank.size-s, .static-blank.size-s { font-size: min(42vw, 14rem); }
