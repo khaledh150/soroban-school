@@ -418,10 +418,10 @@ export default function QuizPage() {
         let typeForSpeech = "number";
         const tokenVal = tokens[idx].val || '';
         const hasBlankInToken = tokenVal.includes('_');
-        const isMultiplicationToken = tokenVal.includes('×');
+        const isMultiplicationToken = tokenVal.includes('×') || tokenVal.includes('÷');
 
         if (tokens[idx].type === "first") {
-          // Use different classes: blank questions smaller, multiplication larger
+          // Use different classes: blank questions smaller, multiplication/division larger
           let tokenClass = "flash-token";
           if (hasBlankInToken) {
             tokenClass = `flash-blank ${getQuestionSizeClass(tokenVal)}`;
@@ -498,14 +498,14 @@ export default function QuizPage() {
     } else {
       // For Book 3 multiplication questions, handle display differently
       const hasBlank = q.q.includes('_'); // Questions like "3 × _ = 9"
-      const isMultiplication = q.q.includes('×');
-      // Use different classes: blank questions smaller, multiplication larger
+      const isMultiplication = q.q.includes('×') || q.q.includes('÷');
+      // Use different classes: blank questions smaller, multiplication/division larger
       let questionClass = "static-question";
       let displayText = q.q;
       if (hasBlank) {
         questionClass = `static-blank ${getQuestionSizeClass(q.q)}`;
       } else if (isMultiplication) {
-        // For multiplication like "3 × 5", add "= ?"
+        // For multiplication/division like "3 × 5" or "12 ÷ 3", add "= ?"
         displayText = `${q.q} = ?`;
         questionClass = `static-multiplication ${getQuestionSizeClass(displayText)}`;
       }
@@ -805,10 +805,10 @@ export default function QuizPage() {
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
             /* Multiplication questions in portrait - large, scaled by length */
-            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(22vw, 7rem); }
-            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(17vw, 5.5rem); }
-            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(12vw, 4rem); }
-            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(9vw, 3rem); }
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: min(28vw, 9rem); }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: min(22vw, 7rem); }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: min(16vw, 5rem); }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(11vw, 3.5rem); }
 
             /* Blank questions in portrait - large, scaled by length */
             .flash-blank.size-s, .static-blank.size-s { font-size: min(42vw, 14rem); }
