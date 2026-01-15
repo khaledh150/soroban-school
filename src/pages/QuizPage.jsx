@@ -94,15 +94,15 @@ const titleMap = {
   5: [
     "Lower Upper 2 Digit",
     "2 Digit ±",
-    "Multiply 2 Digit",
+    "2 Digit × 1 Digit",
     "Multiply Missing Number",
     "Five Buddy 2 Digit"
   ],
   6: [
     "Lower Upper 2 Digit",
-    "Multiply 2 Digit",
+    "2 Digit × 1 Digit",
     "Five Buddy 2 Digit",
-    "Multiply 3 Digit"
+    "3 Digit × 1 Digit"
   ],
   7: [
     "Multiply 3 Digit",
@@ -310,13 +310,13 @@ export default function QuizPage() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Keyboard 
+  // Keyboard
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (view !== 'quiz') return;
       if (e.key === 'Enter') { e.preventDefault(); handleSubmitAnswer(); }
       else if (e.key === 'Backspace') handleAppendDigit('BACK');
-      else if (e.key.toLowerCase() === 'c') handleAppendDigit('C');
+      else if (e.key === '.') handleAppendDigit('.');
       else if (e.key.toLowerCase() === 'x') resetBoard();
       else if (/^[0-9]$/.test(e.key)) handleAppendDigit(e.key);
     };
@@ -552,9 +552,14 @@ export default function QuizPage() {
   const handleAppendDigit = (d) => {
     if (inputLocked) return;
     let newVal = inputValue;
-    if (d === "C") newVal = "";
-    else if (d === "BACK") newVal = newVal.slice(0, -1);
-    else if(newVal.length < 8) newVal += d; 
+    if (d === "BACK") newVal = newVal.slice(0, -1);
+    else if (d === ".") {
+      // Only add decimal if not already present and not at start
+      if (!newVal.includes(".") && newVal.length > 0 && newVal.length < 8) {
+        newVal += d;
+      }
+    }
+    else if(newVal.length < 8) newVal += d;
     setInputValue(newVal);
   };
 
@@ -996,7 +1001,7 @@ export default function QuizPage() {
                   <button className="send-btn" onClick={handleSubmitAnswer} disabled={inputLocked || !inputValue}>{t.send}</button>
               </div>
               <div className="numpad-grid">
-                  {["1","2","3","4","5","6","7","8","9","C","0","BACK"].map(key => (
+                  {["1","2","3","4","5","6","7","8","9",".","0","BACK"].map(key => (
                       <button key={key} className="num-btn" onClick={() => handleAppendDigit(key)}>{key === "BACK" ? "⌫" : key}</button>
                   ))}
               </div>

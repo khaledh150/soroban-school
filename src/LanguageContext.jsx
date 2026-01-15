@@ -44,7 +44,10 @@ export const translations = {
     fontSize: "Font Size",
     equals: "Equals",
     plus: "Plus",
-    minus: "Minus"
+    minus: "Minus",
+    practiceGames: "Practice Games",
+    flashcardPractice: "Flashcard Practice",
+    nadaCalendar: "Nada Calendar"
   },
   th: {
     appTitle: "Soroban For School",
@@ -86,7 +89,10 @@ export const translations = {
     fontSize: "ขนาดตัวอักษร",
     equals: "เท่ากับ",
     plus: "บวก",
-    minus: "ลบ"
+    minus: "ลบ",
+    practiceGames: "เกมฝึกหัด",
+    flashcardPractice: "ฝึกแฟลชการ์ด",
+    nadaCalendar: "ปฏิทินนาดา"
   }
 };
 

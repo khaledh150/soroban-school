@@ -90,15 +90,15 @@ const titleMap = {
   5: [
     "Lower Upper 2 Digit",
     "2 Digit ±",
-    "Multiply 2 Digit",
+    "2 Digit × 1 Digit",
     "Multiply Missing Number",
     "Five Buddy 2 Digit"
   ],
   6: [
     "Lower Upper 2 Digit",
-    "Multiply 2 Digit",
+    "2 Digit × 1 Digit",
     "Five Buddy 2 Digit",
-    "Multiply 3 Digit"
+    "3 Digit × 1 Digit"
   ],
   7: [
     "Multiply 3 Digit",
@@ -485,7 +485,7 @@ function HomePage() {
               <span>{t.exercise}</span>
               {completed && <span className="ml-2">{checkSvg()}</span>}
             </button>
-            
+
             <button
               onClick={handleNextChapter}
               className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 transition active:scale-95"
@@ -494,6 +494,30 @@ function HomePage() {
               <span>{t.next}</span>
               {completed && <span className="ml-2">{checkSvg()}</span>}
             </button>
+          </div>
+
+          {/* Practice Games Section */}
+          <div className="mt-6 pt-4 border-t border-violet-200">
+            <h3 className="text-center text-sm md:text-base font-semibold text-violet-500 mb-3">
+              {t.practiceGames}
+            </h3>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <button
+                onClick={() => { haptic(); navigate('/games/flashcard'); }}
+                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-lg text-white transition active:scale-95 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600"
+              >
+                <span className="material-icons-outlined text-lg mr-1 align-middle">style</span>
+                <span>{t.flashcardPractice}</span>
+              </button>
+
+              <button
+                onClick={() => { haptic(); navigate('/games/calendar'); }}
+                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-lg text-white transition active:scale-95 bg-gradient-to-r from-fuchsia-500 to-purple-500 hover:from-fuchsia-600 hover:to-purple-600"
+              >
+                <span className="material-icons-outlined text-lg mr-1 align-middle">calendar_month</span>
+                <span>{t.nadaCalendar}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -561,7 +585,10 @@ function HomePage() {
                             className={`${baseClasses} ${stateClasses}`}
                             data-chapter-index={j}
                           >
-                            <span className="text-left">{j+1}. {displayTitle.replace(/^Ch\.\s\d+\s/, '')}</span>
+                            <span className="text-left flex items-baseline gap-1.5">
+                              <span className="text-slate-400 font-medium text-xs min-w-[1.5rem]">{j+1}.</span>
+                              <span className="font-bold">{displayTitle.replace(/^Ch\.\s\d+\s/, '')}</span>
+                            </span>
                             {ch.exerciseCompleted && (
                               <span className="ml-3 text-emerald-500">{checkSvg()}</span>
                             )}

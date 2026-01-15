@@ -169,7 +169,7 @@ function randomBook9Chapter7(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 8: 3 Digit ÷ 1 Digit (evenly divisible)
+// Chapter 8: 3 Digit ÷ 1 Digit (evenly divisible, B ≠ 1)
 function randomBook9Chapter8(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -177,7 +177,7 @@ function randomBook9Chapter8(numQuestions = 10): Question[] {
 
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
-    const B = Math.floor(Math.random() * 9) + 1; // 1-9
+    const B = Math.floor(Math.random() * 8) + 2; // 2-9 (B ≠ 1)
     const minC = Math.ceil(100 / B);
     const maxC = Math.floor(999 / B);
     if (minC > maxC) continue;
@@ -196,7 +196,7 @@ function randomBook9Chapter8(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 9: 4 Digit ÷ 1 Digit (evenly divisible)
+// Chapter 9: 4 Digit ÷ 1 Digit (evenly divisible, B ≠ 1)
 function randomBook9Chapter9(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -204,7 +204,7 @@ function randomBook9Chapter9(numQuestions = 10): Question[] {
 
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
-    const B = Math.floor(Math.random() * 9) + 1; // 1-9
+    const B = Math.floor(Math.random() * 8) + 2; // 2-9 (B ≠ 1)
     const minC = Math.ceil(1000 / B);
     const maxC = Math.floor(9999 / B);
     if (minC > maxC) continue;
@@ -223,7 +223,7 @@ function randomBook9Chapter9(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 10: 5 Digit ÷ 1 Digit (evenly divisible)
+// Chapter 10: 5 Digit ÷ 1 Digit (evenly divisible, B ≠ 1)
 function randomBook9Chapter10(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -231,7 +231,7 @@ function randomBook9Chapter10(numQuestions = 10): Question[] {
 
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
-    const B = Math.floor(Math.random() * 9) + 1; // 1-9
+    const B = Math.floor(Math.random() * 8) + 2; // 2-9 (B ≠ 1)
     const minC = Math.ceil(10000 / B);
     const maxC = Math.floor(99999 / B);
     if (minC > maxC) continue;

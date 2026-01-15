@@ -139,6 +139,7 @@ function randomBook5Chapter3(numQuestions = 10): Question[] {
 }
 
 // Chapter 4: Multiply Missing Number (_ × B = C)
+// A×B=C where A is 1 digit (the answer), B is 1 digit, C is 2 digit
 function randomBook5Chapter4(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -147,8 +148,8 @@ function randomBook5Chapter4(numQuestions = 10): Question[] {
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
 
-    // 1. Generate random A (answer) between 1 and 20
-    const A = Math.floor(Math.random() * 20) + 1;
+    // 1. Generate random A (answer) between 1 and 9 (1 digit only)
+    const A = Math.floor(Math.random() * 9) + 1;
     // 2. Generate random B (multiplier) between 1 and 9
     const B = Math.floor(Math.random() * 9) + 1;
     // 3. Calculate C = A * B

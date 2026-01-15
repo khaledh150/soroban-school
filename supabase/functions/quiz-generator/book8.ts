@@ -124,7 +124,7 @@ function randomBook8Chapter5(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 6: 3 Digit ÷ 1 Digit (evenly divisible)
+// Chapter 6: 3 Digit ÷ 1 Digit (evenly divisible, B ≠ 1)
 function randomBook8Chapter6(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -132,7 +132,7 @@ function randomBook8Chapter6(numQuestions = 10): Question[] {
 
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
-    const B = Math.floor(Math.random() * 9) + 1; // 1-9
+    const B = Math.floor(Math.random() * 8) + 2; // 2-9 (B ≠ 1)
     // Generate C such that A = B * C is 3-digit (100-999)
     const minC = Math.ceil(100 / B);
     const maxC = Math.floor(999 / B);
@@ -152,7 +152,7 @@ function randomBook8Chapter6(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 7: 4 Digit ÷ 1 Digit (evenly divisible)
+// Chapter 7: 4 Digit ÷ 1 Digit (evenly divisible, B ≠ 1)
 function randomBook8Chapter7(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -160,7 +160,7 @@ function randomBook8Chapter7(numQuestions = 10): Question[] {
 
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
-    const B = Math.floor(Math.random() * 9) + 1; // 1-9
+    const B = Math.floor(Math.random() * 8) + 2; // 2-9 (B ≠ 1)
     // Generate C such that A = B * C is 4-digit (1000-9999)
     const minC = Math.ceil(1000 / B);
     const maxC = Math.floor(9999 / B);
@@ -208,7 +208,7 @@ function randomBook8Chapter8(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 9: 2 Digit ÷ 2 Digit (evenly divisible)
+// Chapter 9: 2 Digit ÷ 2 Digit (evenly divisible, A ≠ B means C ≠ 1)
 function randomBook8Chapter9(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
@@ -217,10 +217,10 @@ function randomBook8Chapter9(numQuestions = 10): Question[] {
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const B = Math.floor(Math.random() * 90) + 10; // 10-99
-    // Generate C such that A = B * C is 2-digit (10-99)
-    const minC = Math.ceil(10 / B);
+    // Generate C such that A = B * C is 2-digit (10-99), C >= 2 to ensure A ≠ B
+    const minC = Math.max(2, Math.ceil(10 / B)); // C must be at least 2
     const maxC = Math.floor(99 / B);
-    if (minC > maxC || minC < 1) continue;
+    if (minC > maxC) continue;
 
     const C = Math.floor(Math.random() * (maxC - minC + 1)) + minC;
     const A = B * C;

@@ -26,6 +26,8 @@ function lazyWithRetry(importFn) {
 const LoginPage = lazyWithRetry(() => import('./pages/LoginPage.jsx'));
 const HomePage = lazyWithRetry(() => import('./pages/HomePage.jsx'));
 const QuizPage = lazyWithRetry(() => import('./pages/QuizPage.jsx'));
+const FlashcardGame = lazyWithRetry(() => import('./components/games/FlashcardGame.jsx'));
+const CalendarGame = lazyWithRetry(() => import('./components/games/CalendarGame.jsx'));
 
 // Loading fallback component
 function PageLoader() {
@@ -90,6 +92,24 @@ export default function App() {
           element={
             <Protected>
               <QuizPage />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/games/flashcard"
+          element={
+            <Protected>
+              <FlashcardGame />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/games/calendar"
+          element={
+            <Protected>
+              <CalendarGame />
             </Protected>
           }
         />
