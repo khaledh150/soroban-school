@@ -79,17 +79,17 @@ const titleMap = {
     "Multiplication Table of 2 to 9"
 ],
   4: [
-    "lower upper 2 digit", "Five buddy +4 2 digit", "Five buddy +3 2 digit", "Five buddy +2 2 digit", "Five buddy +1 2 digit", 
-    "Five buddy -4 2 digit", "Five buddy -3 2 digit", "Five buddy -2 2 digit", "Five buddy -1 2 digit", "Ten buddy +9 2 digit", 
-    "Ten buddy +8 2 digit", "Ten buddy +7 2 digit", "Ten buddy +6 2 digit", "Ten buddy +5 2 digit", "Ten buddy +4 2 digit", 
-    "Ten buddy +3 2 digit", "Ten buddy +2 2 digit", "Ten buddy +1 2 digit", "Ten buddy -9 2 digit", "Ten buddy -8 2 digit", 
-    "Ten buddy -7 2 digit", "Ten buddy -6 2 digit", "Ten buddy -5 2 digit", "Ten buddy -4 2 digit", "Ten buddy -3 2 digit", 
-    "Ten buddy -2 2 digit", "Ten buddy -1 2 digit", "Five & Ten Buddy +9 2 digit", "Five & Ten Buddy +8 2 digit", "Five & Ten Buddy +7 2 digit",
-    "Five & Ten Buddy +6 2 digit", "Five & Ten Buddy -9 2 digit", "Five & Ten Buddy -8 2 digit", "Five & Ten Buddy -7 2 digit", "Five & Ten Buddy -6 2 digit"
+    "Lower Upper (2 Digit)", "Five Buddy +4 (2 Digit)", "Five Buddy +3 (2 Digit)", "Five Buddy +2 (2 Digit)", "Five Buddy +1 (2 Digit)",
+    "Five Buddy -4 (2 Digit)", "Five Buddy -3 (2 Digit)", "Five Buddy -2 (2 Digit)", "Five Buddy -1 (2 Digit)", "Ten Buddy +9 (2 Digit)",
+    "Ten Buddy +8 (2 Digit)", "Ten Buddy +7 (2 Digit)", "Ten Buddy +6 (2 Digit)", "Ten Buddy +5 (2 Digit)", "Ten Buddy +4 (2 Digit)",
+    "Ten Buddy +3 (2 Digit)", "Ten Buddy +2 (2 Digit)", "Ten Buddy +1 (2 Digit)", "Ten Buddy -9 (2 Digit)", "Ten Buddy -8 (2 Digit)",
+    "Ten Buddy -7 (2 Digit)", "Ten Buddy -6 (2 Digit)", "Ten Buddy -5 (2 Digit)", "Ten Buddy -4 (2 Digit)", "Ten Buddy -3 (2 Digit)",
+    "Ten Buddy -2 (2 Digit)", "Ten Buddy -1 (2 Digit)", "Five & Ten Buddy +9 (2 Digit)", "Five & Ten Buddy +8 (2 Digit)", "Five & Ten Buddy +7 (2 Digit)",
+    "Five & Ten Buddy +6 (2 Digit)", "Five & Ten Buddy -9 (2 Digit)", "Five & Ten Buddy -8 (2 Digit)", "Five & Ten Buddy -7 (2 Digit)", "Five & Ten Buddy -6 (2 Digit)"
   ],
   5: [
     "Lower Upper 2 Digit",
-    "2 Digit +-",
+    "2 Digit ±",
     "Multiply 2 Digit",
     "Multiply Missing Number",
     "Five Buddy 2 Digit"
@@ -105,11 +105,11 @@ const titleMap = {
     "Divide 2 Digit",
     "Divide 3 Digit",
     "Multiply 4 Digit",
-    "2 Digit +-"
+    "2 Digit ±"
   ],
   8: [
     "2 Digit ±",
-    "3 Digit +-",
+    "3 Digit ±",
     "3 Digit × 1 Digit",
     "4 Digit × 1 Digit",
     "2 Digit × 2 Digit",
@@ -125,7 +125,7 @@ const titleMap = {
     "4 Digit × 1 Digit",
     "5 Digit × 1 Digit",
     "2 Digit × 2 Digit",
-    "3 Digit +-",
+    "3 Digit ±",
     "3 Digit ÷ 1 Digit",
     "4 Digit ÷ 1 Digit",
     "5 Digit ÷ 1 Digit",
