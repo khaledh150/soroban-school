@@ -97,6 +97,19 @@ const titleMap = {
     "Multiply 2 Digit",
     "Multiply Missing Number",
     "Five Buddy 2 Digit"
+  ],
+  6: [
+    "Lower Upper 2 Digit",
+    "Multiply 2 Digit",
+    "Five Buddy 2 Digit",
+    "Multiply 3 Digit"
+  ],
+  7: [
+    "Multiply 3 Digit",
+    "Divide 2 Digit",
+    "Divide 3 Digit",
+    "Multiply 4 Digit",
+    "2 Digit +-"
   ]
 };
 
@@ -115,7 +128,7 @@ export default function QuizPage() {
   // Book = Level. We allow up to 10 books.
   const currentLevel = Math.max(1, Math.min(10, levelParam));
   // Allow up to 21 chapters for Book 2
-  const currentChapter = Math.max(1, Math.min(21, chapterParam));
+  const currentChapter = Math.max(1, Math.min(35, chapterParam));
 
   // Get chapter title based on language
   const getChapterTitle = () => {
@@ -670,7 +683,7 @@ export default function QuizPage() {
             max-width: 100%;
         }
         .flash-blank, .static-blank {
-            letter-spacing: -0.05em;
+            letter-spacing: -0.07em;
         }
         .static-multiplication, .static-blank { font-weight: bold; }
 
@@ -680,10 +693,10 @@ export default function QuizPage() {
         .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 4.2rem; }
         .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 3.2rem; }
 
-        .flash-blank.size-s, .static-blank.size-s { font-size: 5.5rem; }
-        .flash-blank.size-m, .static-blank.size-m { font-size: 4.2rem; }
-        .flash-blank.size-l, .static-blank.size-l { font-size: 3.4rem; }
-        .flash-blank.size-xl, .static-blank.size-xl { font-size: 2.6rem; }
+        .flash-blank.size-s, .static-blank.size-s { font-size: 4.5rem; }
+        .flash-blank.size-m, .static-blank.size-m { font-size: 3.5rem; }
+        .flash-blank.size-l, .static-blank.size-l { font-size: 2.8rem; }
+        .flash-blank.size-xl, .static-blank.size-xl { font-size: 2.2rem; }
         
         /* Feedback & Answer */
         .feedback-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -741,10 +754,10 @@ export default function QuizPage() {
             .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 3.5rem; }
             .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 2.6rem; }
 
-            .flash-blank.size-s, .static-blank.size-s { font-size: 5.2rem; }
-            .flash-blank.size-m, .static-blank.size-m { font-size: 4rem; }
-            .flash-blank.size-l, .static-blank.size-l { font-size: 3rem; }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: 2.2rem; }
+            .flash-blank.size-s, .static-blank.size-s { font-size: 4.2rem; }
+            .flash-blank.size-m, .static-blank.size-m { font-size: 3.2rem; }
+            .flash-blank.size-l, .static-blank.size-l { font-size: 2.4rem; }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: 1.8rem; }
 
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
@@ -793,10 +806,10 @@ export default function QuizPage() {
             .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(24vw, 9rem); }
 
             /* Blank questions in portrait - large, scaled by length */
-            .flash-blank.size-s, .static-blank.size-s { font-size: min(52vw, 17rem); }
-            .flash-blank.size-m, .static-blank.size-m { font-size: min(40vw, 13rem); }
-            .flash-blank.size-l, .static-blank.size-l { font-size: min(28vw, 10rem); }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(21vw, 7.5rem); } 
+            .flash-blank.size-s, .static-blank.size-s { font-size: min(42vw, 14rem); }
+            .flash-blank.size-m, .static-blank.size-m { font-size: min(32vw, 11rem); }
+            .flash-blank.size-l, .static-blank.size-l { font-size: min(22vw, 8rem); }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(17vw, 6rem); } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             

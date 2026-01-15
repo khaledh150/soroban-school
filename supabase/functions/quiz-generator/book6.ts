@@ -1,9 +1,9 @@
-// book5.ts - Book 5 Generator Functions
+// book6.ts - Book 6 Generator Functions
 
 import { Question, GenFn, fillQuestions } from "./book1.ts";
 
 // Chapter 1: Lower Upper 2 Digit (clone of randomChapter5MixUpperLower2Digits from book1.ts)
-function randomBook5Chapter1(numQuestions = 10): Question[] {
+function randomBook6Chapter1(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
   let attempts = 0;
@@ -77,56 +77,16 @@ function randomBook5Chapter1(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 2: 2 Digit +- 2 Digit (A ± B ± C ± D = H)
-function randomBook5Chapter2(numQuestions = 10): Question[] {
+// Chapter 2: Multiply 2 Digit (A × B = C, A: 10-99, B: 1-9)
+function randomBook6Chapter2(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
   let attempts = 0;
 
-  function r2digit() { return Math.floor(Math.random() * 90) + 10; } // 10-99
-  function r1digit() { return Math.floor(Math.random() * 9) + 1; }   // 1-9
-  function rOp() { return Math.random() < 0.5 ? "+" : "-"; }
-
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
-    const A = r2digit();
-    const B = r1digit();
-    const C = r1digit();
-    const D = r1digit();
-    const op1 = rOp();
-    const op2 = rOp();
-    const op3 = rOp();
-
-    // Calculate running totals
-    const step1 = op1 === "+" ? A + B : A - B;
-    if (step1 < 0) continue;
-    const step2 = op2 === "+" ? step1 + C : step1 - C;
-    if (step2 < 0) continue;
-    const H = op3 === "+" ? step2 + D : step2 - D;
-    if (H < 0) continue;
-
-    const qStr = `${A} ${op1} ${B} ${op2} ${C} ${op3} ${D}`;
-    if (!uniqueSet.has(qStr)) {
-      questions.push({ q: qStr, a: H.toString() });
-      uniqueSet.add(qStr);
-    }
-  }
-  return fillQuestions(questions, numQuestions!);
-}
-
-// Chapter 3: Multiply 2 Digit (A × B = C)
-function randomBook5Chapter3(numQuestions = 10): Question[] {
-  const questions: Question[] = [];
-  const uniqueSet = new Set<string>();
-  let attempts = 0;
-
-  function r2digit() { return Math.floor(Math.random() * 90) + 10; } // 10-99
-  function r1digit() { return Math.floor(Math.random() * 9) + 1; }   // 1-9
-
-  while (questions.length < numQuestions && attempts < 4000) {
-    attempts++;
-    const A = r2digit();
-    const B = r1digit();
+    const A = Math.floor(Math.random() * 90) + 10; // 10-99
+    const B = Math.floor(Math.random() * 9) + 1;   // 1-9
     const C = A * B;
 
     const qStr = `${A} × ${B}`;
@@ -138,39 +98,8 @@ function randomBook5Chapter3(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Chapter 4: Multiply Missing Number (_ × B = C)
-function randomBook5Chapter4(numQuestions = 10): Question[] {
-  const questions: Question[] = [];
-  const uniqueSet = new Set<string>();
-  let attempts = 0;
-
-  while (questions.length < numQuestions && attempts < 4000) {
-    attempts++;
-
-    // 1. Generate random A (answer) between 1 and 20
-    const A = Math.floor(Math.random() * 20) + 1;
-    // 2. Generate random B (multiplier) between 1 and 9
-    const B = Math.floor(Math.random() * 9) + 1;
-    // 3. Calculate C = A * B
-    const C = A * B;
-
-    // 4. C must be 2-digit (10-99)
-    if (C < 10 || C > 99) continue;
-
-    // 5. Format question as: _ × B = C
-    const qStr = `_ × ${B} = ${C}`;
-
-    if (!uniqueSet.has(qStr)) {
-      // 6. Answer is string value of A
-      questions.push({ q: qStr, a: A.toString() });
-      uniqueSet.add(qStr);
-    }
-  }
-  return fillQuestions(questions, numQuestions!);
-}
-
-// Chapter 5: Five Buddy 2 Digit (clone of randomChapter17Mix5buddy2digits from book1.ts)
-function randomBook5Chapter5(numQuestions = 10): Question[] {
+// Chapter 3: Five Buddy 2 Digit (clone of randomChapter17Mix5buddy2digits from book1.ts)
+function randomBook6Chapter3(numQuestions = 10): Question[] {
   const questions: Question[] = [];
   const uniqueSet = new Set<string>();
   let attempts = 0;
@@ -209,11 +138,31 @@ function randomBook5Chapter5(numQuestions = 10): Question[] {
   return fillQuestions(questions, numQuestions!);
 }
 
-// Export all Book 5 generator functions
-export const book5Generators: Record<number, GenFn> = {
-  1: randomBook5Chapter1,
-  2: randomBook5Chapter2,
-  3: randomBook5Chapter3,
-  4: randomBook5Chapter4,
-  5: randomBook5Chapter5,
+// Chapter 4: Multiply 3 Digit (A × B = C, A: 100-999, B: 1-9)
+function randomBook6Chapter4(numQuestions = 10): Question[] {
+  const questions: Question[] = [];
+  const uniqueSet = new Set<string>();
+  let attempts = 0;
+
+  while (questions.length < numQuestions && attempts < 4000) {
+    attempts++;
+    const A = Math.floor(Math.random() * 900) + 100; // 100-999
+    const B = Math.floor(Math.random() * 9) + 1;     // 1-9
+    const C = A * B;
+
+    const qStr = `${A} × ${B}`;
+    if (!uniqueSet.has(qStr)) {
+      questions.push({ q: qStr, a: C.toString() });
+      uniqueSet.add(qStr);
+    }
+  }
+  return fillQuestions(questions, numQuestions!);
+}
+
+// Export all Book 6 generator functions
+export const book6Generators: Record<number, GenFn> = {
+  1: randomBook6Chapter1,
+  2: randomBook6Chapter2,
+  3: randomBook6Chapter3,
+  4: randomBook6Chapter4,
 };

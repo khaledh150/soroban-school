@@ -93,6 +93,19 @@ const titleMap = {
     "Multiply 2 Digit",
     "Multiply Missing Number",
     "Five Buddy 2 Digit"
+  ],
+  6: [
+    "Lower Upper 2 Digit",
+    "Multiply 2 Digit",
+    "Five Buddy 2 Digit",
+    "Multiply 3 Digit"
+  ],
+  7: [
+    "Multiply 3 Digit",
+    "Divide 2 Digit",
+    "Divide 3 Digit",
+    "Multiply 4 Digit",
+    "2 Digit +-"
   ]
 };
 
@@ -156,13 +169,16 @@ function HomePage() {
 
   useEffect(() => {
     const initialLevels = [];
-    for (let i = 1; i <= 5; i++) {
-      // Book 1 has 17 chapters, Book 2 has 21 chapters, Book 3 has 17 chapters, Book 4 has 35 chapters, others default to 5
+    for (let i = 1; i <= 7; i++) {
+      // Chapter counts per book
       let nCh = 5;
       if (i === 1) nCh = 17;
       if (i === 2) nCh = 21;
       if (i === 3) nCh = 17;
       if (i === 4) nCh = 35;
+      if (i === 5) nCh = 5;
+      if (i === 6) nCh = 4;
+      if (i === 7) nCh = 5;
 
       initialLevels.push({
         name: "Book " + i,
