@@ -731,10 +731,10 @@ export default function QuizPage() {
             .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 3.5rem; }
             .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 2.6rem; }
 
-            .flash-blank.size-s, .static-blank.size-s { font-size: 5rem; }
-            .flash-blank.size-m, .static-blank.size-m { font-size: 4rem; }
-            .flash-blank.size-l, .static-blank.size-l { font-size: 3rem; }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: 2.2rem; }
+            .flash-blank.size-s, .static-blank.size-s { font-size: 6rem; }
+            .flash-blank.size-m, .static-blank.size-m { font-size: 4.5rem; }
+            .flash-blank.size-l, .static-blank.size-l { font-size: 3.5rem; }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: 2.6rem; }
 
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
@@ -783,10 +783,10 @@ export default function QuizPage() {
             .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: min(24vw, 9rem); }
 
             /* Blank questions in portrait - large, scaled by length */
-            .flash-blank.size-s, .static-blank.size-s { font-size: min(50vw, 18rem); }
-            .flash-blank.size-m, .static-blank.size-m { font-size: min(38vw, 14rem); }
-            .flash-blank.size-l, .static-blank.size-l { font-size: min(28vw, 10rem); }
-            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(20vw, 7rem); } 
+            .flash-blank.size-s, .static-blank.size-s { font-size: min(60vw, 20rem); }
+            .flash-blank.size-m, .static-blank.size-m { font-size: min(45vw, 16rem); }
+            .flash-blank.size-l, .static-blank.size-l { font-size: min(32vw, 12rem); }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: min(24vw, 9rem); } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
