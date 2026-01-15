@@ -374,19 +374,13 @@ export default function QuizPage() {
     return tokens;
   };
 
-  // Dynamic font scaling for multiplication questions based on character length
-  const getQuestionScale = (text) => {
+  // Get size class based on question length for responsive sizing
+  const getQuestionSizeClass = (text) => {
     const len = text.length;
-    // Short questions (e.g., "3 × 5") - full size
-    if (len <= 5) return 1;
-    // Medium questions (e.g., "12 × 8") - slightly smaller
-    if (len <= 7) return 0.85;
-    // Longer questions (e.g., "12 × 12") - smaller
-    if (len <= 9) return 0.7;
-    // Very long questions (e.g., "3 × _ = 15") - much smaller
-    if (len <= 12) return 0.55;
-    // Extra long - scale down more
-    return 0.45;
+    if (len <= 5) return "size-s";   // "3 × 5"
+    if (len <= 7) return "size-m";   // "12 × 8"
+    if (len <= 10) return "size-l";  // "12 × 12"
+    return "size-xl";                // "3 × _ = 15"
   };
 
   const flashQuestionTokens = (questionString, cb) => {
@@ -409,15 +403,12 @@ export default function QuizPage() {
         if (tokens[idx].type === "first") {
           // Use different classes: blank questions smaller, multiplication larger
           let tokenClass = "flash-token";
-          let scaleStyle = {};
           if (hasBlankInToken) {
-            tokenClass = "flash-blank";
-            scaleStyle = { transform: `scale(${getQuestionScale(tokenVal)})` };
+            tokenClass = `flash-blank ${getQuestionSizeClass(tokenVal)}`;
           } else if (isMultiplicationToken) {
-            tokenClass = "flash-multiplication";
-            scaleStyle = { transform: `scale(${getQuestionScale(tokenVal)})` };
+            tokenClass = `flash-multiplication ${getQuestionSizeClass(tokenVal)}`;
           }
-          content = <div className={tokenClass} style={scaleStyle}>{tokenVal}</div>;
+          content = <div className={tokenClass}>{tokenVal}</div>;
           textForSpeech = tokenVal;
         } else {
           content = (
@@ -485,16 +476,13 @@ export default function QuizPage() {
       const isMultiplication = q.q.includes('×');
       // Use different classes: blank questions smaller, multiplication larger
       let questionClass = "static-question";
-      let scaleStyle = {};
       if (hasBlank) {
-        questionClass = "static-blank";
-        scaleStyle = { transform: `scale(${getQuestionScale(q.q)})` };
+        questionClass = `static-blank ${getQuestionSizeClass(q.q)}`;
       } else if (isMultiplication) {
-        questionClass = "static-multiplication";
-        scaleStyle = { transform: `scale(${getQuestionScale(q.q)})` };
+        questionClass = `static-multiplication ${getQuestionSizeClass(q.q)}`;
       }
       setFlashContent(
-        <div className={questionClass} style={scaleStyle}>
+        <div className={questionClass}>
             {q.q} {!isMultiplication && <>=</>} {!hasBlank && <span style={{color: '#ef4444'}}>?</span>}
         </div>
       );
@@ -661,38 +649,26 @@ export default function QuizPage() {
         .flash-qmark { font-size: clamp(8rem, 20vw, 15rem); color: #ef4444; font-weight: 900; }
         .static-question { font-size: clamp(3rem, 8vw, 6rem); font-weight: bold; color: #4d79ff; }
 
-        /* Multiplication questions (3 × 5) - large sizing with dynamic scale */
-        .flash-multiplication {
-            font-size: clamp(5rem, 18vw, 12rem);
+        /* Multiplication & Blank questions - base styles */
+        .flash-multiplication, .static-multiplication, .flash-blank, .static-blank {
             font-weight: 900;
             color: #4d79ff;
             line-height: 1.1;
             white-space: nowrap;
-            transform-origin: center center;
+            text-align: center;
         }
-        .static-multiplication {
-            font-size: clamp(4.5rem, 16vw, 10rem);
-            font-weight: bold;
-            color: #4d79ff;
-            white-space: nowrap;
-            transform-origin: center center;
-        }
-        /* Blank questions (3 × _ = 9) - with dynamic scale */
-        .flash-blank {
-            font-size: clamp(3.5rem, 14vw, 8rem);
-            font-weight: 900;
-            color: #4d79ff;
-            line-height: 1.1;
-            white-space: nowrap;
-            transform-origin: center center;
-        }
-        .static-blank {
-            font-size: clamp(3rem, 12vw, 7rem);
-            font-weight: bold;
-            color: #4d79ff;
-            white-space: nowrap;
-            transform-origin: center center;
-        }
+        .static-multiplication, .static-blank { font-weight: bold; }
+
+        /* Size variants for different question lengths */
+        .flash-multiplication.size-s, .static-multiplication.size-s { font-size: clamp(3rem, 15vw, 8rem); }
+        .flash-multiplication.size-m, .static-multiplication.size-m { font-size: clamp(2.5rem, 12vw, 6rem); }
+        .flash-multiplication.size-l, .static-multiplication.size-l { font-size: clamp(2rem, 10vw, 5rem); }
+        .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: clamp(1.5rem, 8vw, 4rem); }
+
+        .flash-blank.size-s, .static-blank.size-s { font-size: clamp(2.5rem, 12vw, 6rem); }
+        .flash-blank.size-m, .static-blank.size-m { font-size: clamp(2rem, 10vw, 5rem); }
+        .flash-blank.size-l, .static-blank.size-l { font-size: clamp(1.8rem, 8vw, 4rem); }
+        .flash-blank.size-xl, .static-blank.size-xl { font-size: clamp(1.5rem, 6vw, 3rem); }
         
         /* Feedback & Answer */
         .feedback-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -744,11 +720,16 @@ export default function QuizPage() {
             .feedback-icon { font-size: 25vh; }
             .correct-answer-text { font-size: 5vh; margin-top: 0; }
 
-            /* Multiplication questions in landscape - large with dynamic scale */
-            .flash-multiplication { font-size: clamp(6rem, 40vw, 12rem); line-height: 1.1; }
-            .static-multiplication { font-size: clamp(5rem, 35vw, 10rem); }
-            .flash-blank { font-size: clamp(4rem, 28vw, 8rem); line-height: 1.1; }
-            .static-blank { font-size: clamp(3.5rem, 24vw, 7rem); }
+            /* Multiplication questions in landscape - sized for 280px panel */
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: 2.8rem; }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: 2.2rem; }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: 1.7rem; }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: 1.3rem; }
+
+            .flash-blank.size-s, .static-blank.size-s { font-size: 2.4rem; }
+            .flash-blank.size-m, .static-blank.size-m { font-size: 1.9rem; }
+            .flash-blank.size-l, .static-blank.size-l { font-size: 1.5rem; }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: 1.2rem; }
 
             /* FIX: Make Ready text smaller in landscape so it fits the narrow side panel */
             .ready-go-text { font-size: 5rem; line-height: 1; }
@@ -790,12 +771,17 @@ export default function QuizPage() {
             .flash-qmark { font-size: clamp(12rem, 60vw, 30rem); }
             .feedback-icon { font-size: clamp(12rem, 60vw, 30rem); }
 
-            /* Multiplication questions in portrait - huge with dynamic scale */
-            .flash-multiplication { font-size: clamp(14rem, 80vw, 36rem); line-height: 1.1; }
-            .static-multiplication { font-size: clamp(12rem, 70vw, 32rem); }
-            /* Blank questions in portrait - large with dynamic scale */
-            .flash-blank { font-size: clamp(8rem, 50vw, 20rem); line-height: 1.1; }
-            .static-blank { font-size: clamp(7rem, 45vw, 18rem); } 
+            /* Multiplication questions in portrait - sized to never overflow */
+            .flash-multiplication.size-s, .static-multiplication.size-s { font-size: clamp(4rem, 18vw, 10rem); }
+            .flash-multiplication.size-m, .static-multiplication.size-m { font-size: clamp(3.5rem, 14vw, 8rem); }
+            .flash-multiplication.size-l, .static-multiplication.size-l { font-size: clamp(3rem, 11vw, 6rem); }
+            .flash-multiplication.size-xl, .static-multiplication.size-xl { font-size: clamp(2.2rem, 8vw, 4.5rem); }
+
+            /* Blank questions in portrait - sized to never overflow */
+            .flash-blank.size-s, .static-blank.size-s { font-size: clamp(3.5rem, 16vw, 9rem); }
+            .flash-blank.size-m, .static-blank.size-m { font-size: clamp(3rem, 12vw, 7rem); }
+            .flash-blank.size-l, .static-blank.size-l { font-size: clamp(2.5rem, 9vw, 5rem); }
+            .flash-blank.size-xl, .static-blank.size-xl { font-size: clamp(2rem, 7vw, 4rem); } 
             .correct-answer-text { font-size: clamp(3rem, 10vh, 5rem); }
             .static-question { font-size: clamp(4rem, 20vw, 12rem); } 
             
