@@ -296,7 +296,22 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     }, Math.max(speed, 0.4) * 1000);
   };
 
+  // Request fullscreen
+  const requestFullscreen = () => {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+  };
+
   const handleStart = () => {
+    // Request fullscreen
+    requestFullscreen();
+
     // TTS UNLOCK: Must speak a REAL word to wake up Android engine
     if (ttsEnabled) {
         window.speechSynthesis.cancel();
@@ -369,6 +384,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             speakText(lang === 'th' ? `ผิด คำตอบคือ ${actualAnswer}` : `Wrong, answer is ${actualAnswer}`);
         }
         setPhase("feedback");
+        // Auto-advance after showing feedback (like quiz logic)
+        const feedbackDelay = isCorrect ? 1200 : 2000; // Longer delay for wrong to show correct answer
+        const autoAdvanceId = setTimeout(() => {
+            handleNextRound(true);
+        }, feedbackDelay);
+        timeoutsRef.current.push(autoAdvanceId);
     } else {
         setTimeout(() => {
             handleNextRound(true);
@@ -420,29 +441,6 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
   // --- RENDER HELPERS ---
   const currentSet = gameSetsRef.current[currentSetIndex] || [];
-
-  // Game-specific text (not in global translations)
-  const gameText = {
-    speed: lang === 'th' ? "ความเร็ว (วิ)" : "Speed (sec)",
-    numset: lang === 'th' ? "ตัวเลข/ชุด" : "Numbers/Set",
-    rounds: lang === 'th' ? "จำนวนรอบ" : "Rounds",
-    revealMode: lang === 'th' ? "โหมด" : "Mode",
-    modeEach: lang === 'th' ? "ฝึกซ้อม" : "Practice",
-    modeEnd: lang === 'th' ? "แข่งขัน" : "Competition",
-    start: lang === 'th' ? "เริ่มเกม" : "START GAME",
-    nextSet: lang === 'th' ? "ถัดไป" : "NEXT",
-    submit: lang === 'th' ? "ส่งคำตอบ" : "SUBMIT",
-    finish: lang === 'th' ? "จบเกม" : "FINISH",
-    getReady: lang === 'th' ? "เตรียมตัว" : "GET READY",
-    summary: lang === 'th' ? "สรุปผล" : "RESULTS",
-    correct: lang === 'th' ? "ถูกต้อง!" : "CORRECT!",
-    wrong: lang === 'th' ? "ผิด!" : "WRONG!",
-    ansWas: lang === 'th' ? "คำตอบ:" : "Answer:",
-    playAgain: lang === 'th' ? "เล่นอีกครั้ง" : "PLAY AGAIN",
-    mainMenu: lang === 'th' ? "กลับ" : "BACK",
-    settings: lang === 'th' ? "ตั้งค่า" : "SETTINGS",
-    tts: lang === 'th' ? "เสียงอ่าน" : "Voice",
-  };
 
   const renderDisplayContent = () => {
     if (phase === "settings" || phase === "getready" || !currentSet.length) return null;
@@ -496,7 +494,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       {phase !== "settings" && phase !== "summary" && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-white/80 backdrop-blur-md rounded-full border border-slate-200 shadow-md z-30">
           <h2 className="text-sm sm:text-lg font-black text-slate-700 tracking-widest uppercase flex items-center gap-2 whitespace-nowrap">
-            {`${gameText.rounds} ${currentSetIndex + 1} / ${totalRounds}`}
+            {`${t.rounds} ${currentSetIndex + 1} / ${totalRounds}`}
           </h2>
         </div>
       )}
@@ -509,7 +507,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             <div className="grid grid-cols-2 gap-4">
                 {/* Speed */}
                 <div className="bg-slate-50 p-3 rounded-2xl">
-                   <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{gameText.speed}</label>
+                   <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.speedSec}</label>
                    <div className="flex items-center justify-center">
                       <input
                          type="number" min={0.3} max={5} step={0.1}
@@ -520,35 +518,35 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                 </div>
                 {/* Rounds */}
                 <div className="bg-slate-50 p-3 rounded-2xl">
-                   <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{gameText.rounds}</label>
+                   <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.rounds}</label>
                    <div className="flex items-center justify-between">
-                      <button onClick={() => setTotalRounds(Math.max(1, totalRounds - 1))} className="w-8 h-8 rounded-lg bg-white text-cyan-600 font-bold shadow-sm">-</button>
+                      <button onClick={() => setTotalRounds(Math.max(1, totalRounds - 1))} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">-</button>
                       <span className="text-2xl font-black text-slate-800">{totalRounds}</span>
-                      <button onClick={() => setTotalRounds(Math.min(50, totalRounds + 1))} className="w-8 h-8 rounded-lg bg-white text-cyan-600 font-bold shadow-sm">+</button>
+                      <button onClick={() => setTotalRounds(Math.min(50, totalRounds + 1))} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">+</button>
                    </div>
                 </div>
             </div>
 
             {/* Num Per Set */}
             <div className="bg-slate-50 p-3 rounded-2xl">
-               <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{gameText.numset}</label>
+               <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.numbersPerSet}</label>
                <div className="flex items-center justify-between px-4">
-                  <button onClick={() => setNumbersPerSet(Math.max(1, numbersPerSet - 1))} className="w-10 h-10 rounded-xl bg-white text-xl font-bold text-cyan-600 shadow-sm">-</button>
+                  <button onClick={() => setNumbersPerSet(Math.max(1, numbersPerSet - 1))} className="w-10 h-10 rounded-xl bg-white text-xl font-bold text-violet-600 shadow-sm">-</button>
                   <span className="text-3xl font-black text-slate-800">{numbersPerSet}</span>
-                  <button onClick={() => setNumbersPerSet(Math.min(20, numbersPerSet + 1))} className="w-10 h-10 rounded-xl bg-white text-xl font-bold text-cyan-600 shadow-sm">+</button>
+                  <button onClick={() => setNumbersPerSet(Math.min(20, numbersPerSet + 1))} className="w-10 h-10 rounded-xl bg-white text-xl font-bold text-violet-600 shadow-sm">+</button>
                </div>
             </div>
 
             {/* Mode & TTS */}
             <div className="flex gap-3">
                <div className="flex-1 bg-slate-50 p-3 rounded-2xl flex flex-col gap-2">
-                  <label className="text-slate-400 font-bold text-xs uppercase ml-1">{gameText.revealMode}</label>
-                  <button onClick={() => setRevealMode(revealMode === 'each' ? 'end' : 'each')} className="flex-1 bg-white rounded-xl font-bold text-cyan-700 shadow-sm py-2 text-sm border-2 border-cyan-100">
-                      {revealMode === 'each' ? gameText.modeEach : gameText.modeEnd}
+                  <label className="text-slate-400 font-bold text-xs uppercase ml-1">{t.mode}</label>
+                  <button onClick={() => setRevealMode(revealMode === 'each' ? 'end' : 'each')} className="flex-1 bg-white rounded-xl font-bold text-violet-700 shadow-sm py-2 text-sm border-2 border-violet-100">
+                      {revealMode === 'each' ? t.modePractice : t.modeCompetition}
                   </button>
                </div>
                <div className="w-1/3 bg-slate-50 p-3 rounded-2xl flex flex-col gap-2">
-                  <label className="text-slate-400 font-bold text-xs uppercase ml-1">{gameText.tts}</label>
+                  <label className="text-slate-400 font-bold text-xs uppercase ml-1">{t.voice}</label>
                   <button onClick={() => setTtsEnabled(!ttsEnabled)} className={`flex-1 rounded-xl font-bold shadow-sm py-2 text-xl ${ttsEnabled ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-400'}`}>
                       {ttsEnabled ? '🔊' : '🔇'}
                   </button>
@@ -557,9 +555,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
             <button
               onClick={handleStart}
-              className="mt-2 w-full py-4 rounded-2xl text-2xl font-black text-white uppercase tracking-widest bg-gradient-to-r from-cyan-400 to-blue-500 shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+              className="mt-2 w-full py-4 rounded-2xl text-2xl font-black text-violet-700 uppercase tracking-widest bg-blue-200 shadow-md hover:bg-blue-300 hover:scale-[1.02] active:scale-95 transition-all"
             >
-              {gameText.start}
+              {t.startGame}
             </button>
           </div>
         </div>
@@ -578,7 +576,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       {phase === "summary" && (
         <div className="flex-1 w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-500 px-2 overflow-hidden">
             <div className="w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl p-6 flex flex-col max-h-[90vh]">
-                <h3 className="text-center text-2xl font-black text-slate-800 mb-4 uppercase border-b pb-2 shrink-0">{gameText.summary}</h3>
+                <h3 className="text-center text-2xl font-black text-slate-800 mb-4 uppercase border-b pb-2 shrink-0">{t.summary}</h3>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-3 no-scrollbar">
                     {practiceHistory.map((item, idx) => {
@@ -623,15 +621,15 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                 {/* Footer Buttons */}
                 {revealedSummaryCount >= practiceHistory.length && (
                     <div className="flex flex-col gap-3 mt-4 shrink-0 animate-in slide-in-from-bottom-4 fade-in duration-500">
-                       <button onClick={handleStart} className="w-full py-4 rounded-2xl bg-cyan-500 text-white font-black text-xl shadow-lg hover:bg-cyan-600 active:scale-95 transition-all">
-                          {gameText.playAgain}
+                       <button onClick={handleStart} className="w-full py-4 rounded-2xl bg-blue-200 text-violet-700 font-black text-xl shadow-md hover:bg-blue-300 active:scale-95 transition-all">
+                          {t.playAgain}
                        </button>
                        <div className="flex gap-3">
-                          <button onClick={handleBackToSettings} className="flex-1 py-3 rounded-xl bg-slate-200 text-slate-600 font-bold active:scale-95 transition-all">
-                             {gameText.settings}
+                          <button onClick={handleBackToSettings} className="flex-1 py-3 rounded-xl bg-blue-100 text-violet-600 font-bold active:scale-95 transition-all">
+                             {t.settings}
                           </button>
-                          <button onClick={goToMainMenu} className="flex-1 py-3 rounded-xl bg-slate-200 text-slate-600 font-bold active:scale-95 transition-all">
-                             {gameText.mainMenu}
+                          <button onClick={goToMainMenu} className="flex-1 py-3 rounded-xl bg-blue-100 text-violet-600 font-bold active:scale-95 transition-all">
+                             {t.mainMenu}
                           </button>
                        </div>
                     </div>
@@ -652,7 +650,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                {Array.from({length: Math.max(1, Math.min(numbersPerSet, 20))}).map((_, i) => (
                  <div
                    key={i}
-                   className={`h-3 w-3 sm:h-4 sm:w-4 rounded-full transition-all duration-200 ${i <= currentNumberIndex ? 'bg-cyan-500 scale-125' : 'bg-slate-300'}`}
+                   className={`h-3 w-3 sm:h-4 sm:w-4 rounded-full transition-all duration-200 ${i <= currentNumberIndex ? 'bg-violet-500 scale-125' : 'bg-slate-300'}`}
                  />
                ))}
              </div>
@@ -664,7 +662,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
          <div className="flex-1 w-full h-full flex flex-col items-center justify-center animate-in slide-in-from-bottom-10 fade-in duration-300">
             {/* Display Input */}
             <div className="mb-6 w-full max-w-xs sm:max-w-sm px-4">
-               <div className="bg-white rounded-2xl border-4 border-cyan-100 h-20 sm:h-24 flex items-center justify-center shadow-inner">
+               <div className="bg-white rounded-2xl border-4 border-violet-100 h-20 sm:h-24 flex items-center justify-center shadow-inner">
                   <span className="text-5xl sm:text-6xl font-black text-slate-800">{userInput || <span className="text-slate-200">?</span>}</span>
                </div>
             </div>
@@ -680,8 +678,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                <button onClick={() => handleKeypadPress("DEL")} className="h-14 sm:h-16 bg-red-50 rounded-xl shadow-md text-xl font-bold text-red-500 active:scale-95 transition-all">DEL</button>
             </div>
 
-            <button onClick={handleSubmitAnswer} className="mt-6 w-full max-w-xs sm:max-w-sm px-4 py-4 rounded-2xl bg-cyan-500 text-white font-black text-2xl shadow-lg hover:bg-cyan-600 active:scale-95 transition-all">
-               {gameText.submit}
+            <button onClick={handleSubmitAnswer} className="mt-6 w-full max-w-xs sm:max-w-sm px-4 py-4 rounded-2xl bg-pink-400 text-white font-black text-2xl shadow-md hover:bg-pink-500 active:scale-95 transition-all">
+               {t.submit}
             </button>
          </div>
       )}
@@ -693,17 +691,13 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                  {feedbackStatus === 'correct' ? '✓' : '✗'}
              </div>
              <h2 className="text-4xl font-black text-slate-800 mt-4 mb-2">
-                 {feedbackStatus === 'correct' ? gameText.correct : gameText.wrong}
+                 {feedbackStatus === 'correct' ? t.correct : t.wrong}
              </h2>
              {feedbackStatus === 'wrong' && (
-                 <div className="text-2xl font-bold text-slate-500 flex gap-2">
-                    {gameText.ansWas} <span className="text-cyan-600">{actualAnswer}</span>
+                 <div className="text-3xl font-black text-violet-600 mt-2">
+                    {actualAnswer}
                  </div>
              )}
-
-             <button onClick={() => handleNextRound(false)} autoFocus className="mt-12 px-12 py-5 rounded-full bg-slate-800 text-white font-black text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all">
-                 {currentSetIndex + 1 < totalRounds ? gameText.nextSet : gameText.finish} →
-             </button>
          </div>
       )}
 

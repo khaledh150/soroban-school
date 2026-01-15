@@ -20,16 +20,6 @@ import beepSoundFile from "../../assets/sounds/Arcade-Attention-Beep.wav";
 /* CONSTANTS & UTILS                                                 */
 /* ------------------------------------------------------------------ */
 
-const WEEKDAY_SHORT = {
-  en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-  th: ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"],
-};
-
-const WEEKDAY_FULL = {
-  en: ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"],
-  th: ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"],
-};
-
 // Physics / Sizing Constants
 const ITEM_HEIGHT = 220;
 const REEL_VISIBLE_HEIGHT = 220;
@@ -198,26 +188,7 @@ function Reel({ items, targetValue, duration, loops, spinId }) {
 
 const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   const navigate = useNavigate();
-  const { lang } = useLanguage();
-
-  // Game-specific text
-  const gameText = {
-    yearType: lang === 'th' ? "รูปแบบปี" : "Year Format",
-    normal_year: lang === 'th' ? "ค.ศ." : "A.D. (2025)",
-    thai_year: lang === 'th' ? "พ.ศ." : "B.E. (2568)",
-    start: lang === 'th' ? "หมุน!" : "SPIN!",
-    show_answer: lang === 'th' ? "เฉลย" : "REVEAL",
-    next_round: lang === 'th' ? "เล่นอีกครั้ง" : "PLAY AGAIN",
-    get_ready: lang === 'th' ? "เตรียมตัว" : "GET READY",
-    jackpot: lang === 'th' ? "เรียบร้อย!" : "COMPLETE!",
-    day: lang === 'th' ? "วัน" : "DAY",
-    month: lang === 'th' ? "เดือน" : "MONTH",
-    year: lang === 'th' ? "ปี" : "YEAR",
-    rotate: lang === 'th' ? "หมุนหน้าจอ" : "ROTATE DEVICE",
-    rotate_hint: lang === 'th' ? "กรุณาหมุนหน้าจอเป็นแนวนอนเพื่อเล่นเกมนี้" : "Please use landscape for this game.",
-    rotate_cta: lang === 'th' ? "หมุนหน้าจอเพื่อไปต่อ" : "Rotate to continue",
-    tap_to_start: lang === 'th' ? "แตะเพื่อเริ่ม" : "TAP TO START",
-  };
+  const { lang, t } = useLanguage();
 
   const [yearType, setYearType] = useState("normal");
   const [phase, setPhase] = useState("settings");
@@ -344,8 +315,8 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   const weekdayName = useMemo(() => {
     if (!date) return "";
     const d = new Date(date.year, date.month - 1, date.day);
-    return WEEKDAY_FULL[lang][d.getDay()];
-  }, [date, lang]);
+    return t.weekdayFull[d.getDay()];
+  }, [date, t]);
 
   const calendarWeeks = useMemo(() => {
     if (!date) return [];
@@ -416,8 +387,21 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     }
   }, [rotateBlocked, landscapeRequiredNow, pendingStart]);
 
+  // Request fullscreen
+  const requestFullscreen = () => {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(() => {});
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+  };
+
   const startRoundActual = () => {
     clearTimers();
+    requestFullscreen();
     const d = randomDate();
     setDate(d);
 
@@ -496,7 +480,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   /* ------------------------------------------------------------------ */
 
   return (
-    <div className="w-full h-full flex flex-col items-center overflow-hidden relative pt-24 sm:pt-28">
+    <div className="w-full h-full flex flex-col items-center overflow-hidden relative">
 
       {/* BACK BUTTON (ALWAYS VISIBLE) */}
       <button
@@ -520,13 +504,13 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
           <div className="text-center px-8">
             <div className="text-6xl sm:text-7xl mb-6">📱↻</div>
             <div className="text-3xl sm:text-4xl font-black text-white tracking-widest uppercase">
-              {gameText.rotate}
+              {t.rotateDevice}
             </div>
             <div className="text-lg sm:text-xl text-slate-200 font-bold mt-3">
-              {gameText.rotate_hint}
+              {t.rotateHint}
             </div>
             <div className="text-sm sm:text-base text-slate-300 font-semibold mt-4 uppercase tracking-widest">
-              {gameText.rotate_cta}
+              {t.rotateCta}
             </div>
             {!landscapeRequiredNow && pendingStart && (
               <button
@@ -538,7 +522,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
                   hover:scale-105 active:scale-95 transition-all
                 "
               >
-                {gameText.tap_to_start}
+                {t.tapToStart}
               </button>
             )}
           </div>
@@ -563,7 +547,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
             <div className="flex flex-col items-center gap-2">
                <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">
-                 {gameText.yearType}
+                 {t.yearFormat}
                </span>
                <div className="flex gap-4">
                  {['normal', 'thai'].map((type) => (
@@ -573,11 +557,11 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
                      className={`
                        px-8 py-3 rounded-2xl font-bold text-xl transition-all duration-300
                        ${yearType === type
-                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105'
+                         ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30 scale-105'
                          : 'bg-white text-slate-400 hover:bg-slate-50'}
                      `}
                    >
-                     {type === 'normal' ? gameText.normal_year : gameText.thai_year}
+                     {type === 'normal' ? t.normalYear : t.thaiYear}
                    </button>
                  ))}
                </div>
@@ -586,15 +570,15 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             <button
               onClick={startRound}
               className="
-                w-full py-5 rounded-2xl text-3xl font-black text-white uppercase tracking-widest
-                bg-linear-to-r from-violet-500 to-fuchsia-500
-                shadow-[0_15px_40px_rgba(168,85,247,0.4)]
-                hover:shadow-[0_20px_50px_rgba(168,85,247,0.6)]
+                w-full py-5 rounded-2xl text-2xl font-black text-violet-700 uppercase tracking-widest
+                bg-blue-200
+                shadow-md
+                hover:bg-blue-300
                 hover:scale-[1.02] active:scale-95
                 transition-all duration-300
               "
             >
-              {gameText.start}
+              {t.spin}
             </button>
           </div>
         </div>
@@ -623,7 +607,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
           <div className="bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full shadow-sm border border-white">
              <h2 className="text-2xl font-black text-slate-800 tracking-widest uppercase flex items-center gap-3">
                <span className="text-blue-500">❖</span>
-               {phase === 'answer' ? gameText.jackpot : "NADA CALENDAR"}
+               {phase === 'answer' ? t.complete : "NADA CALENDAR"}
                <span className="text-blue-500">❖</span>
              </h2>
           </div>
@@ -640,9 +624,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
              ">
                 {/* Labels */}
                 <div className="flex text-white font-bold text-sm tracking-widest mb-2 px-6">
-                    <span className="flex-1 text-center text-blue-300">{gameText.day}</span>
-                    <span className="flex-1 text-center text-blue-300">{gameText.month}</span>
-                    <span className="flex-1 text-center text-blue-300">{gameText.year}</span>
+                    <span className="flex-1 text-center text-blue-300">{t.day}</span>
+                    <span className="flex-1 text-center text-blue-300">{t.month}</span>
+                    <span className="flex-1 text-center text-blue-300">{t.year}</span>
                 </div>
 
                 <div className="bg-slate-800 p-4 rounded-[2.5rem] relative overflow-hidden ring-1 ring-white/5">
@@ -683,13 +667,13 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
                   onClick={handleShowAnswer}
                   disabled={!canShowAnswer}
                   className={`
-                    px-16 py-5 rounded-full font-black text-2xl tracking-widest uppercase transition-all duration-300
+                    px-16 py-5 rounded-2xl font-black text-2xl tracking-widest uppercase transition-all duration-300
                     ${canShowAnswer
-                      ? 'bg-emerald-500 text-white shadow-[0_10px_30px_rgba(16,185,129,0.4)] hover:scale-110 hover:shadow-[0_20px_40px_rgba(16,185,129,0.6)] animate-pulse-slow'
+                      ? 'bg-pink-400 text-white shadow-md hover:scale-105 hover:bg-pink-500 animate-pulse-slow'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed scale-95 opacity-50'}
                   `}
                 >
-                  {gameText.show_answer}
+                  {t.reveal}
                 </button>
             )}
           </div>
@@ -722,7 +706,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
               <div className="w-full bg-slate-50 rounded-3xl p-4 sm:p-5">
                  <table className="w-full text-center border-collapse">
                     <thead>
-                       <tr>{WEEKDAY_SHORT[lang].map(d => <th key={d} className="text-slate-400 text-xs sm:text-base uppercase font-bold pb-3">{d}</th>)}</tr>
+                       <tr>{t.weekdayShort.map(d => <th key={d} className="text-slate-400 text-xs sm:text-base uppercase font-bold pb-3">{d}</th>)}</tr>
                     </thead>
                     <tbody>
                        {calendarWeeks.map((week, i) => (
@@ -762,12 +746,12 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
            <button
               onClick={startRound}
               className="
-                mb-8 px-10 py-4 rounded-full bg-white text-slate-900 font-black text-xl
-                shadow-[0_10px_30px_rgba(255,255,255,0.2)]
-                hover:scale-105 hover:bg-blue-50 transition-all flex items-center gap-3
+                mb-8 px-10 py-4 rounded-2xl bg-blue-200 text-violet-700 font-black text-xl
+                shadow-md
+                hover:scale-105 hover:bg-blue-300 transition-all flex items-center gap-3
               "
            >
-              <span>🔄</span> {gameText.next_round}
+              <span>🔄</span> {t.playAgain}
            </button>
         </div>
       )}
