@@ -8,6 +8,8 @@ import { book4Generators } from "./book4.ts";
 import { book5Generators } from "./book5.ts";
 import { book6Generators } from "./book6.ts";
 import { book7Generators } from "./book7.ts";
+import { book8Generators } from "./book8.ts";
+import { book9Generators } from "./book9.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +49,14 @@ function getGenerator(book: number, chapter: number): GenFn {
 
   if (book === 7) {
     return book7Generators[chapter] || defaultGenerator;
+  }
+
+  if (book === 8) {
+    return book8Generators[chapter] || defaultGenerator;
+  }
+
+  if (book === 9) {
+    return book9Generators[chapter] || defaultGenerator;
   }
 
   // For any other book number, default to Book 1

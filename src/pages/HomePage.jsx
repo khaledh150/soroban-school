@@ -106,6 +106,31 @@ const titleMap = {
     "Divide 3 Digit",
     "Multiply 4 Digit",
     "2 Digit +-"
+  ],
+  8: [
+    "2 Digit ±",
+    "3 Digit +-",
+    "3 Digit × 1 Digit",
+    "4 Digit × 1 Digit",
+    "2 Digit × 2 Digit",
+    "3 Digit ÷ 1 Digit",
+    "4 Digit ÷ 1 Digit",
+    "3 Digit ÷ 2 Digit",
+    "2 Digit ÷ 2 Digit"
+  ],
+  9: [
+    "± Decimals < 1",
+    "± Decimal > 1",
+    "3 Digit × 1 Digit",
+    "4 Digit × 1 Digit",
+    "5 Digit × 1 Digit",
+    "2 Digit × 2 Digit",
+    "3 Digit +-",
+    "3 Digit ÷ 1 Digit",
+    "4 Digit ÷ 1 Digit",
+    "5 Digit ÷ 1 Digit",
+    "3 Digit ÷ 2 Digit",
+    "4 Digit ÷ 2 Digit"
   ]
 };
 
@@ -169,7 +194,7 @@ function HomePage() {
 
   useEffect(() => {
     const initialLevels = [];
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 9; i++) {
       // Chapter counts per book
       let nCh = 5;
       if (i === 1) nCh = 17;
@@ -179,6 +204,8 @@ function HomePage() {
       if (i === 5) nCh = 5;
       if (i === 6) nCh = 4;
       if (i === 7) nCh = 5;
+      if (i === 8) nCh = 9;
+      if (i === 9) nCh = 12;
 
       initialLevels.push({
         name: "Book " + i,
