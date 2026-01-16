@@ -861,69 +861,76 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         /* Phone landscape mode - slot machine must fit viewport */
         @media (max-height: 500px) and (orientation: landscape) {
           .slot-container {
-            padding-top: 3rem !important;
-            gap: 0.25rem !important;
+            padding-top: 2.5rem !important;
+            gap: 0 !important;
             justify-content: flex-start !important;
           }
           .slot-label {
             display: none !important;
           }
           .slot-machine-wrapper {
-            transform: scale(0.68) !important;
+            transform: scale(0.72) !important;
             transform-origin: top center !important;
-            margin-top: -0.5rem !important;
+            margin-top: 0 !important;
             transition: none !important;
-            max-width: 95vw !important;
+            max-width: 100vw !important;
+            width: 95vw !important;
           }
-          /* Floating reveal button - bottom right */
+          /* Floating reveal button - fixed bottom right, doesn't affect layout */
           .reveal-btn-container {
             position: fixed !important;
-            bottom: 1rem !important;
-            right: 1rem !important;
+            bottom: 0.75rem !important;
+            right: 0.75rem !important;
+            width: auto !important;
             padding: 0 !important;
             margin: 0 !important;
             z-index: 100 !important;
           }
           .reveal-btn-container button {
-            padding: 0.75rem 1.5rem !important;
-            font-size: 0.875rem !important;
+            padding: 0.6rem 1.25rem !important;
+            font-size: 0.8rem !important;
             border-radius: 9999px !important;
           }
-          /* Results panel for phone landscape - taller */
+          /* Results panel for phone landscape - much taller to show full calendar */
           .answer-panel {
-            max-height: 80vh !important;
-            padding: 1rem !important;
-            gap: 0.5rem !important;
+            max-height: 95vh !important;
+            height: auto !important;
+            padding: 0.75rem !important;
+            gap: 0.25rem !important;
+            margin-top: 2.5rem !important;
+            overflow-y: auto !important;
           }
           .answer-panel .calendar-grid {
-            padding: 0.5rem !important;
+            padding: 0.25rem !important;
           }
           .answer-panel .calendar-grid td {
-            padding: 0.125rem !important;
+            padding: 0.1rem !important;
           }
           .answer-panel .calendar-grid .day-cell {
-            width: 1.75rem !important;
-            height: 1.75rem !important;
-            font-size: 0.75rem !important;
+            width: 1.5rem !important;
+            height: 1.5rem !important;
+            font-size: 0.65rem !important;
+            border-radius: 0.375rem !important;
           }
           .answer-panel .calendar-grid .day-cell.target {
             transform: scale(1.1) !important;
           }
           .answer-panel .weekday-title {
-            font-size: 1.5rem !important;
+            font-size: 1.25rem !important;
           }
           .answer-panel .date-display {
-            font-size: 1rem !important;
+            font-size: 0.875rem !important;
+            padding: 0.25rem 0.5rem !important;
           }
           /* Floating play again button */
           .play-again-float {
             position: fixed !important;
-            bottom: 1rem !important;
-            right: 1rem !important;
+            bottom: 0.75rem !important;
+            right: 0.75rem !important;
             z-index: 100 !important;
             margin: 0 !important;
-            padding: 0.75rem 1.5rem !important;
-            font-size: 0.875rem !important;
+            padding: 0.6rem 1.25rem !important;
+            font-size: 0.8rem !important;
             border-radius: 9999px !important;
           }
         }
