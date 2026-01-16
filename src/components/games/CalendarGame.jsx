@@ -363,6 +363,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
 
   const startRound = () => {
+    // Always request fullscreen on any device when clicking spin
+    requestFullscreen();
+
     // Gate: On phone/tablet, require landscape BEFORE starting any sounds/logic
     if (landscapeRequiredNow) {
       setRotateBlocked(true);
@@ -492,8 +495,8 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     setPendingStart(false);
 
     // If in settings, go back to homepage; otherwise go to settings
+    // Don't exit fullscreen when navigating - user can manually exit if needed
     if (phase === "settings") {
-      exitFullscreen();
       navigate(-1);
     } else {
       setPhase("settings");
@@ -601,9 +604,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
           </div>
 
           <div className="
-            bg-white/60 backdrop-blur-xl p-10 rounded-[3rem]
+            bg-white/60 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem]
             shadow-[0_20px_70px_rgba(0,0,0,0.15)] border border-white/50
-            max-w-xl w-full text-center flex flex-col gap-6
+            max-w-md w-full text-center flex flex-col gap-4
           ">
 
             <div className="flex flex-col items-center gap-2">
@@ -658,9 +661,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
       {/* --- PHASE: SLOT MACHINE --- */}
       {(phase === "slot" || (phase === "answer" && date)) && (
-        <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500 pt-16">
+        <div className="slot-container flex-1 w-full flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500 pt-16">
 
-          <div className="bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full shadow-sm border border-white">
+          <div className="slot-label bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full shadow-sm border border-white">
              <h2 className="text-2xl font-black text-slate-800 tracking-widest uppercase flex items-center gap-3">
                <span className="text-blue-500">❖</span>
                {phase === 'answer' ? t.complete : "NADA CALENDAR"}
@@ -670,7 +673,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
           {/* THE MACHINE */}
           <div className={`
-             relative w-full max-w-6xl px-4 transition-transform duration-100
+             slot-machine-wrapper relative w-full max-w-6xl px-4 transition-transform duration-100
              ${isSpinning ? 'vibrate' : ''}
           `}>
              <div className="
@@ -717,7 +720,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
              </div>
           </div>
 
-          <div className="flex items-center justify-center w-full py-2 sm:py-4">
+          <div className="reveal-btn-container flex items-center justify-center w-full py-2 sm:py-4">
             {phase === "slot" && (
                 <button
                   onClick={handleShowAnswer}
@@ -849,6 +852,30 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         @media (max-height: 600px) and (orientation: landscape) {
           .ready-number { font-size: 5rem; }
           .ready-word { font-size: 4rem; }
+        }
+
+        /* Phone landscape mode - slot machine must fit viewport */
+        @media (max-height: 500px) and (orientation: landscape) {
+          .slot-container {
+            padding-top: 3.5rem !important;
+            gap: 0.5rem !important;
+            justify-content: flex-start !important;
+          }
+          .slot-label {
+            display: none !important;
+          }
+          .slot-machine-wrapper {
+            transform: scale(0.65);
+            transform-origin: top center;
+            margin-top: -1rem;
+          }
+          .reveal-btn-container {
+            padding: 0.25rem 0 !important;
+          }
+          .reveal-btn-container button {
+            padding: 0.5rem 2rem !important;
+            font-size: 1rem !important;
+          }
         }
       `}</style>
     </div>

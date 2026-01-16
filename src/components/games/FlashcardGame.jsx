@@ -514,8 +514,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     clearTimers();
     window.speechSynthesis.cancel();
     // If in settings, go back to homepage; otherwise go to settings
+    // Don't exit fullscreen when navigating - user can manually exit if needed
     if (phase === "settings") {
-      exitFullscreen();
       navigate(-1);
     } else {
       handleBackToSettings();
@@ -812,18 +812,20 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       {/* --- PHASE: FEEDBACK (Practice Result) --- */}
       {phase === "feedback" && (
-         <div className="flex-1 w-full flex flex-col items-center justify-center animate-in zoom-in duration-300 pb-12">
-             <div className="font-black drop-shadow-2xl" style={{ fontSize: 'min(15vh, 25vw)', color: feedbackStatus === 'correct' ? '#22c55e' : '#ef4444' }}>
-                 {feedbackStatus === 'correct' ? '✓' : '✗'}
-             </div>
-             <h2 className="text-4xl font-black text-slate-800 mt-4 mb-2">
-                 {feedbackStatus === 'correct' ? t.correct : t.wrong}
-             </h2>
-             {feedbackStatus === 'wrong' && (
-                 <div className="text-3xl font-black text-violet-600 mt-2">
-                    {actualAnswer}
+         <div className="flex-1 w-full flex flex-col items-center justify-center pb-12">
+             <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300">
+                 <div className="font-black drop-shadow-2xl" style={{ fontSize: 'min(22vh, 35vw)', color: feedbackStatus === 'correct' ? '#22c55e' : '#ef4444' }}>
+                     {feedbackStatus === 'correct' ? '✓' : '✗'}
                  </div>
-             )}
+                 <h2 className="text-4xl sm:text-5xl font-black text-slate-800 mt-2 mb-2">
+                     {feedbackStatus === 'correct' ? t.correct : t.wrong}
+                 </h2>
+                 {feedbackStatus === 'wrong' && (
+                     <div className="text-4xl sm:text-5xl font-black text-emerald-500 mt-2">
+                        {actualAnswer}
+                     </div>
+                 )}
+             </div>
          </div>
       )}
 
