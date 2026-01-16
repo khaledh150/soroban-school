@@ -869,23 +869,29 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             display: none !important;
           }
           .slot-machine-wrapper {
-            transform: scale(0.55) !important;
+            transform: scale(0.68) !important;
             transform-origin: top center !important;
             margin-top: -0.5rem !important;
             transition: none !important;
             max-width: 95vw !important;
           }
+          /* Floating reveal button - bottom right */
           .reveal-btn-container {
-            padding: 0.25rem 0 !important;
-            margin-top: -2rem !important;
+            position: fixed !important;
+            bottom: 1rem !important;
+            right: 1rem !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            z-index: 100 !important;
           }
           .reveal-btn-container button {
-            padding: 0.5rem 2rem !important;
-            font-size: 1rem !important;
+            padding: 0.75rem 1.5rem !important;
+            font-size: 0.875rem !important;
+            border-radius: 9999px !important;
           }
-          /* Results panel for phone landscape */
+          /* Results panel for phone landscape - taller */
           .answer-panel {
-            max-height: 70vh !important;
+            max-height: 80vh !important;
             padding: 1rem !important;
             gap: 0.5rem !important;
           }

@@ -436,6 +436,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   // Start next round without the ready overlay (for practice mode auto-advance)
   const startNextRoundDirectly = (targetIndex) => {
     clearTimers();
+    setPhase("playing"); // Set phase immediately to prevent feedback from showing new answer
     setCurrentSetIndex(targetIndex);
     setCurrentNumberIndex(0);
     setActualAnswer(null);
