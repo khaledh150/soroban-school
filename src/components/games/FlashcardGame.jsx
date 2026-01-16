@@ -69,6 +69,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
   const [currentNumberIndex, setCurrentNumberIndex] = useState(0);
   const [readyText, setReadyText] = useState("");
+  const [isReadyWord, setIsReadyWord] = useState(false);
   const [actualAnswer, setActualAnswer] = useState(null);
 
   // --- INPUT & SCORE ---
@@ -133,28 +134,24 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     };
   }, []);
 
-  // --- TTS ENGINE (Using same pattern as QuizPage for smooth dictation) ---
-  const speakText = useCallback((text, type = 'number') => {
+  // --- TTS ENGINE (Optimized for sync with flashing numbers) ---
+  const speakNumber = useCallback((num) => {
     if (!ttsEnabled || !isMounted.current) return;
 
     window.speechSynthesis.cancel();
 
-    let spokenText = text;
-
-    if (text === 'equals') {
-      spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
-    } else if (lang === 'th') {
-      if (type === 'op') {
-        spokenText = text.replace('+', 'บวก ').replace('-', 'ลบ ');
-      }
+    // Build speech text - just the number with plus/minus
+    let spokenText;
+    if (lang === 'th') {
+      if (num >= 0) spokenText = `บวก ${Math.abs(num)}`;
+      else spokenText = `ลบ ${Math.abs(num)}`;
     } else {
-      if (type === 'op') {
-        spokenText = text.replace('+', 'Plus ').replace('-', 'Minus ');
-      }
+      if (num >= 0) spokenText = `Plus ${Math.abs(num)}`;
+      else spokenText = `Minus ${Math.abs(num)}`;
     }
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = 1.1;
+    utterance.rate = 1.3; // Faster rate to keep up with flashing
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
 
     // Find preferred voice
@@ -172,18 +169,39 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     // Bind ref to prevent Garbage Collection
     currentUtteranceRef.current = utterance;
     utterance.onend = () => { currentUtteranceRef.current = null; };
-    utterance.onerror = (e) => { console.error("TTS Error:", e); };
+    utterance.onerror = () => {};
 
-    // Small delay helps Android clear the previous audio buffer
-    setTimeout(() => window.speechSynthesis.speak(utterance), 10);
+    // Speak immediately - no delay for better sync
+    window.speechSynthesis.speak(utterance);
   }, [ttsEnabled, lang, voices]);
 
-  const speakNumber = useCallback((num) => {
-    let text = "";
-    if (num >= 0) text = `+ ${Math.abs(num)}`;
-    else text = `- ${Math.abs(num)}`;
-    speakText(text, 'op');
-  }, [speakText]);
+  // Speak "equals" at the end of flashing
+  const speakEquals = useCallback(() => {
+    if (!ttsEnabled || !isMounted.current) return;
+
+    window.speechSynthesis.cancel();
+
+    const spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
+    const utterance = new SpeechSynthesisUtterance(spokenText);
+    utterance.rate = 1.2;
+    utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
+
+    const preferredVoice = voices.find(v =>
+      lang === 'th'
+        ? (v.lang === "th-TH" || v.lang === "th_TH")
+        : (v.name.includes("Google US English") || v.lang === "en-US" || v.lang === "en_US")
+    );
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+      utterance.lang = preferredVoice.lang;
+    }
+
+    currentUtteranceRef.current = utterance;
+    utterance.onend = () => { currentUtteranceRef.current = null; };
+    window.speechSynthesis.speak(utterance);
+  }, [ttsEnabled, lang, voices]);
+
 
   const playSound = (name) => {
     try {
@@ -215,39 +233,39 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
        setActualAnswer(ans);
     }
 
-    // 1. Play the long audio file ONCE. This keeps the engine awake.
+    // Play audio at start (same as QuizPage)
     playSound("ready");
 
-    // 2. Visual Sequence Logic
-    const seq = ["GET", "READY", "3", "2", "1", "GO!"];
+    // Visual Sequence Logic - EXACT same as QuizPage showReadySetGo
+    const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
 
     const runSeq = () => {
         if (!isMounted.current) return;
 
         const text = seq[i];
+        const isWord = text.length > 1;
         setReadyText(text);
+        setIsReadyWord(isWord);
 
-        const isGo = i === seq.length - 1;
-        const duration = isGo ? 900 : 700;
+        const delay = 800; // Same timing as QuizPage
 
-        if (!isGo) {
+        if (i < seq.length - 1) {
             const id = setTimeout(() => {
                 i++;
                 runSeq();
-            }, duration);
+            }, delay);
             timeoutsRef.current.push(id);
         } else {
+            // After "1", clear and pause before starting
             const id = setTimeout(() => {
                 setReadyText("");
-
-                // EXTRA PAUSE: 1 Second before flashing starts
+                // 1 second pause before flashing starts (same as QuizPage)
                 const pauseId = setTimeout(() => {
                     startFlashing(targetIndex);
                 }, 1000);
                 timeoutsRef.current.push(pauseId);
-
-            }, duration);
+            }, delay);
             timeoutsRef.current.push(id);
         }
     };
@@ -275,8 +293,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
 
-          // Speak EQUALS immediately upon finishing the sequence
-          speakText("equals");
+          // Speak "equals" after flashing numbers
+          speakEquals();
 
           // Transition to input immediately to show the "?" in the input box
           setTimeout(() => {
@@ -378,11 +396,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         if (isCorrect) {
             setFeedbackStatus("correct");
             playSound("ding");
-            speakText(lang === 'th' ? 'ถูกต้อง' : 'Correct');
+            // No speech for correct/wrong - dictation only for numbers
         } else {
             setFeedbackStatus("wrong");
             playSound("wrong");
-            speakText(lang === 'th' ? `ผิด คำตอบคือ ${actualAnswer}` : `Wrong, answer is ${actualAnswer}`);
+            // No speech for correct/wrong - dictation only for numbers
         }
         setPhase("feedback");
         // Auto-advance after showing feedback (like quiz logic)
@@ -579,13 +597,19 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       {/* --- PHASE: SETTINGS --- */}
       {phase === "settings" && (
-        <div className="flex-1 w-full flex items-center justify-center animate-in fade-in zoom-in duration-300 px-4 pt-16 pb-4 overflow-y-auto">
-          <div className="bg-white/90 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] shadow-xl border border-white max-w-lg w-full flex flex-col gap-4">
+        <div className="flex-1 w-full flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300 px-4 pt-16 pb-4 overflow-y-auto">
 
-            {/* Game Title */}
-            <h1 className="text-center text-2xl sm:text-3xl font-black text-slate-800 uppercase tracking-tight mb-2">
-              {t.flashcardPractice}
+          {/* Game Title - ABOVE Settings Panel */}
+          <div className="mb-6 text-center">
+            <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-pink-500 via-violet-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">
+              ⚡ FLASHCARD
             </h1>
+            <p className="text-lg sm:text-xl font-bold text-slate-500 mt-1 tracking-widest uppercase">
+              {t.modePractice}
+            </p>
+          </div>
+
+          <div className="bg-white/90 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] shadow-xl border border-white max-w-lg w-full flex flex-col gap-4">
 
             <div className="grid grid-cols-2 gap-4">
                 {/* Speed */}
@@ -646,10 +670,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         </div>
       )}
 
-      {/* --- PHASE: GET READY --- */}
+      {/* --- PHASE: GET READY (Same styling as QuizPage) --- */}
       {phase === "getready" && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-md">
-           <div className="font-black text-white leading-none drop-shadow-[0_0_50px_rgba(6,182,212,0.8)] animate-bounce text-center" style={{ fontSize: 'min(15vh, 25vw)' }}>
+           <div
+             className={`font-black text-pink-400 leading-none drop-shadow-[0_0_30px_rgba(253,144,215,0.6)] text-center ${isReadyWord ? 'ready-word' : 'ready-number'}`}
+           >
              {readyText}
            </div>
         </div>
@@ -801,7 +827,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
          </div>
       )}
 
-      {/* CSS Utility for hidden scrollbar */}
+      {/* CSS Utility for hidden scrollbar and ready overlay */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -817,6 +843,17 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         }
         .animate-pop-in {
           animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        /* Ready overlay - same sizing as QuizPage */
+        .ready-number {
+          font-size: clamp(10rem, 55vw, 25rem);
+        }
+        .ready-word {
+          font-size: clamp(5rem, 20vw, 10rem);
+        }
+        @media (max-height: 600px) and (orientation: landscape) {
+          .ready-number { font-size: 5rem; }
+          .ready-word { font-size: 4rem; }
         }
       `}</style>
     </div>

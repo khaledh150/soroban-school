@@ -478,7 +478,7 @@ function HomePage() {
               className={`inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md transition active:scale-95 ${
                 completed
                   ? "bg-pink-400 text-white"
-                  : "bg-blue-200 text-violet-700"
+                  : "bg-blue-200 text-violet-700 hover:bg-blue-300"
               }`}
             >
               <span className="material-icons-outlined text-base md:text-lg mr-1">play_arrow</span>
@@ -488,7 +488,7 @@ function HomePage() {
 
             <button
               onClick={handleNextChapter}
-              className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 transition active:scale-95"
+              className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 hover:bg-blue-300 transition active:scale-95"
             >
               <span className="material-icons-outlined text-base md:text-lg mr-1">navigate_next</span>
               <span>{t.next}</span>
@@ -504,7 +504,7 @@ function HomePage() {
             <div className="flex justify-center gap-4 flex-wrap">
               <button
                 onClick={() => { haptic(); navigate('/games/flashcard'); }}
-                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-pink-400 to-violet-500 hover:from-pink-500 hover:to-violet-600"
+                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-blue-400 via-violet-400 to-pink-400 hover:from-blue-500 hover:via-violet-500 hover:to-pink-500"
               >
                 <span className="material-icons-outlined text-lg mr-1 align-middle">style</span>
                 <span>{t.flashcardPractice}</span>
@@ -512,7 +512,7 @@ function HomePage() {
 
               <button
                 onClick={() => { haptic(); navigate('/games/calendar'); }}
-                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-pink-400 to-violet-500 hover:from-pink-500 hover:to-violet-600"
+                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-blue-400 via-violet-400 to-pink-400 hover:from-blue-500 hover:via-violet-500 hover:to-pink-500"
               >
                 <span className="material-icons-outlined text-lg mr-1 align-middle">calendar_month</span>
                 <span>{t.nadaCalendar}</span>

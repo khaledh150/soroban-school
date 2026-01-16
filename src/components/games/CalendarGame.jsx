@@ -196,6 +196,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
   // Get Ready State
   const [readyText, setReadyText] = useState("");
+  const [isReadyWord, setIsReadyWord] = useState(false);
 
   const [spinId, setSpinId] = useState(0);
   const [canShowAnswer, setCanShowAnswer] = useState(false);
@@ -408,36 +409,47 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
     setPhase("getready");
 
-    // Play audio at start
+    // Play audio at start (same as QuizPage)
     playSound("ready");
-    setReadyText("GET");
 
-    // Sequence: 0.7s each for text, with GO! at the end
-    const steps = [
-      { t: 700, txt: "READY" },
-      { t: 1400, txt: "3" },
-      { t: 2100, txt: "2" },
-      { t: 2800, txt: "1" },
-      { t: 3500, txt: "GO!" }, // Add GO! like FlashcardGame
-      { t: 4400, txt: null }, // Clear and start game
-    ];
+    // Visual Sequence Logic - EXACT same as QuizPage showReadySetGo
+    const seq = ["Get", "Ready", "3", "2", "1"];
+    let i = 0;
 
-    steps.forEach(({ t: time, txt }) => {
-      const id = setTimeout(() => {
-        if (txt === null) {
-          stopSound("ready");
-          setReadyText("");
-          playSound("buzz");
-          // 1 Second Static Pause before Lever
-          setTimeout(() => {
-              triggerSpinSequence();
-          }, 1000);
+    const text = seq[i];
+    const isWord = text.length > 1;
+    setReadyText(text);
+    setIsReadyWord(isWord);
+
+    const runSeq = () => {
+        const delay = 800; // Same timing as QuizPage
+
+        if (i < seq.length - 1) {
+            const id = setTimeout(() => {
+                i++;
+                const nextText = seq[i];
+                const nextIsWord = nextText.length > 1;
+                setReadyText(nextText);
+                setIsReadyWord(nextIsWord);
+                runSeq();
+            }, delay);
+            timeoutsRef.current.push(id);
         } else {
-          setReadyText(txt);
+            // After "1", clear and pause before starting
+            const id = setTimeout(() => {
+                setReadyText("");
+                playSound("buzz");
+                // 1 second pause before spin starts (same as QuizPage)
+                const pauseId = setTimeout(() => {
+                    triggerSpinSequence();
+                }, 1000);
+                timeoutsRef.current.push(pauseId);
+            }, delay);
+            timeoutsRef.current.push(id);
         }
-      }, time);
-      timeoutsRef.current.push(id);
-    });
+    };
+
+    runSeq();
   };
 
   const handleShowAnswer = () => {
@@ -576,15 +588,23 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
       {/* --- PHASE: SETTINGS --- */}
       {phase === "settings" && (
-        <div className="flex-1 w-full flex items-center justify-center animate-in fade-in zoom-in duration-500 pt-16">
+        <div className="flex-1 w-full flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 pt-16">
+
+          {/* Game Title - ABOVE Settings Panel */}
+          <div className="mb-6 text-center">
+            <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-lg tracking-tight">
+              📅 NADA CALENDAR
+            </h1>
+            <p className="text-lg sm:text-xl font-bold text-slate-500 mt-1 tracking-widest uppercase">
+              Weekday Challenge
+            </p>
+          </div>
+
           <div className="
             bg-white/60 backdrop-blur-xl p-10 rounded-[3rem]
             shadow-[0_20px_70px_rgba(0,0,0,0.15)] border border-white/50
             max-w-xl w-full text-center flex flex-col gap-6
           ">
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight uppercase">
-              {t.nadaCalendar}
-            </h1>
 
             <div className="flex flex-col items-center gap-2">
                <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">
@@ -625,18 +645,13 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         </div>
       )}
 
-      {/* --- PHASE: GET READY --- */}
+      {/* --- PHASE: GET READY (Same styling as QuizPage) --- */}
       {phase === "getready" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
-          <div className="text-center">
-            <div className="
-              text-[8rem] sm:text-[12rem] font-black text-transparent bg-clip-text
-              bg-linear-to-b from-yellow-300 to-orange-500
-              drop-shadow-[0_10px_30px_rgba(234,179,8,0.5)]
-              animate-bounce
-            ">
-              {readyText}
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md">
+          <div
+            className={`font-black text-pink-400 leading-none drop-shadow-[0_0_30px_rgba(253,144,215,0.6)] text-center ${isReadyWord ? 'ready-word' : 'ready-number'}`}
+          >
+            {readyText}
           </div>
         </div>
       )}
@@ -823,6 +838,17 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         }
         .animate-pulse-slow {
           animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        /* Ready overlay - same sizing as QuizPage */
+        .ready-number {
+          font-size: clamp(10rem, 55vw, 25rem);
+        }
+        .ready-word {
+          font-size: clamp(5rem, 20vw, 10rem);
+        }
+        @media (max-height: 600px) and (orientation: landscape) {
+          .ready-number { font-size: 5rem; }
+          .ready-word { font-size: 4rem; }
         }
       `}</style>
     </div>
