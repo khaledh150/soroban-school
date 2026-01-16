@@ -504,7 +504,7 @@ function HomePage() {
             <div className="flex justify-center gap-4 flex-wrap">
               <button
                 onClick={() => { haptic(); navigate('/games/flashcard'); }}
-                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-violet-700 transition active:scale-95 bg-blue-200 hover:bg-blue-300"
+                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-pink-400 to-violet-500 hover:from-pink-500 hover:to-violet-600"
               >
                 <span className="material-icons-outlined text-lg mr-1 align-middle">style</span>
                 <span>{t.flashcardPractice}</span>
@@ -512,7 +512,7 @@ function HomePage() {
 
               <button
                 onClick={() => { haptic(); navigate('/games/calendar'); }}
-                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-violet-700 transition active:scale-95 bg-blue-200 hover:bg-blue-300"
+                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-pink-400 to-violet-500 hover:from-pink-500 hover:to-violet-600"
               >
                 <span className="material-icons-outlined text-lg mr-1 align-middle">calendar_month</span>
                 <span>{t.nadaCalendar}</span>

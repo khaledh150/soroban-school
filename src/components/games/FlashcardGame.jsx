@@ -313,11 +313,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     requestFullscreen();
 
     // TTS UNLOCK: Must speak a REAL word to wake up Android engine
+    // Volume set to near-zero to be inaudible
     if (ttsEnabled) {
         window.speechSynthesis.cancel();
-        const unlock = new SpeechSynthesisUtterance("Ready");
-        unlock.rate = 1.5;
-        unlock.volume = 0.1;
+        const unlock = new SpeechSynthesisUtterance(" ");
+        unlock.rate = 2;
+        unlock.volume = 0.01;
         window.speechSynthesis.speak(unlock);
     }
 
@@ -361,9 +362,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   }, [phase, userInput]);
 
   const handleSubmitAnswer = () => {
-    if (userInput === "") return;
+    if (userInput === "" && revealMode === "each") return; // Only require input in practice mode
 
-    const userInt = parseInt(userInput, 10);
+    const userInt = userInput ? parseInt(userInput, 10) : null;
     const isCorrect = userInt === actualAnswer;
 
     setPracticeHistory(prev => [...prev, {
@@ -390,19 +391,63 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             handleNextRound(true);
         }, feedbackDelay);
         timeoutsRef.current.push(autoAdvanceId);
+    }
+    // Competition mode doesn't auto-advance - user clicks Next/Results button
+  };
+
+  // Handle competition mode next/results navigation
+  const handleCompetitionNext = () => {
+    // Record current round (no user answer in competition mode)
+    setPracticeHistory(prev => [...prev, {
+        setIndex: currentSetIndex,
+        userAnswer: null,
+        correctAnswer: actualAnswer,
+        isCorrect: false // Not applicable in competition
+    }]);
+
+    const nextIdx = currentSetIndex + 1;
+    if (nextIdx < totalRounds) {
+        startSequenceForSet(nextIdx);
     } else {
-        setTimeout(() => {
-            handleNextRound(true);
-        }, 150);
+        startSummarySequence();
     }
   };
 
   // --- NAVIGATION ---
 
+  // Start next round without the ready overlay (for practice mode auto-advance)
+  const startNextRoundDirectly = (targetIndex) => {
+    clearTimers();
+    setCurrentSetIndex(targetIndex);
+    setCurrentNumberIndex(0);
+    setActualAnswer(null);
+    setUserInput("");
+    setFeedbackStatus(null);
+
+    const nps = Math.max(1, Math.min(numbersPerSet, 20));
+    const currentSetNumbers = gameSetsRef.current[targetIndex];
+
+    if (currentSetNumbers) {
+       const ans = currentSetNumbers.slice(0, nps).reduce((a, b) => a + b, 0);
+       setActualAnswer(ans);
+    }
+
+    // Small delay then start flashing directly
+    const id = setTimeout(() => {
+      startFlashing(targetIndex);
+    }, 500);
+    timeoutsRef.current.push(id);
+  };
+
   const handleNextRound = (autoAdvance = false) => {
     const nextIdx = currentSetIndex + 1;
     if (nextIdx < totalRounds) {
-        startSequenceForSet(nextIdx);
+        // In practice mode, skip the ready overlay for subsequent rounds
+        if (revealMode === "each" && autoAdvance) {
+            startNextRoundDirectly(nextIdx);
+        } else {
+            startSequenceForSet(nextIdx);
+        }
     } else {
         startSummarySequence();
     }
@@ -429,10 +474,34 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     gameSetsRef.current = [];
   };
 
+  // Exit fullscreen helper
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitFullscreenElement) {
+      document.webkitExitFullscreen?.();
+    }
+  };
+
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      exitFullscreen();
+    } else {
+      requestFullscreen();
+    }
+  };
+
   const goToMainMenu = () => {
     clearTimers();
     window.speechSynthesis.cancel();
-    navigate(-1); // Navigate back instead of page reload
+    // If in settings, go back to homepage; otherwise go to settings
+    if (phase === "settings") {
+      exitFullscreen();
+      navigate(-1);
+    } else {
+      handleBackToSettings();
+    }
   }
 
   useImperativeHandle(ref, () => ({
@@ -490,6 +559,15 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         <span className="text-2xl sm:text-3xl font-black text-slate-900">←</span>
       </button>
 
+      {/* Fullscreen Toggle Button - Top Right */}
+      <button
+        onClick={toggleFullscreen}
+        className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[999] w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/90 backdrop-blur-md border border-white/70 shadow-[0_12px_30px_rgba(0,0,0,0.18)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+        aria-label="Fullscreen"
+      >
+        <span className="text-xl sm:text-2xl">⛶</span>
+      </button>
+
       {/* Title / Round Indicator - MOVED TO BOTTOM */}
       {phase !== "settings" && phase !== "summary" && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-white/80 backdrop-blur-md rounded-full border border-slate-200 shadow-md z-30">
@@ -503,6 +581,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       {phase === "settings" && (
         <div className="flex-1 w-full flex items-center justify-center animate-in fade-in zoom-in duration-300 px-4 pt-16 pb-4 overflow-y-auto">
           <div className="bg-white/90 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] shadow-xl border border-white max-w-lg w-full flex flex-col gap-4">
+
+            {/* Game Title */}
+            <h1 className="text-center text-2xl sm:text-3xl font-black text-slate-800 uppercase tracking-tight mb-2">
+              {t.flashcardPractice}
+            </h1>
 
             <div className="grid grid-cols-2 gap-4">
                 {/* Speed */}
@@ -593,16 +676,18 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                             >
                                 <div className="flex flex-col gap-1 overflow-hidden">
                                     <div className="flex items-center gap-3">
-                                        <span className={`text-white font-black w-8 h-8 flex shrink-0 items-center justify-center rounded-full shadow-md ${item.isCorrect ? 'bg-blue-500' : 'bg-red-500'}`}>
+                                        <span className={`text-white font-black w-8 h-8 flex shrink-0 items-center justify-center rounded-full shadow-md ${revealMode === "each" ? (item.isCorrect ? 'bg-blue-500' : 'bg-red-500') : 'bg-blue-500'}`}>
                                             {idx + 1}
                                         </span>
                                         <span className="font-mono text-sm sm:text-lg text-slate-500 font-bold truncate">
                                            {equationStr} =
                                         </span>
                                     </div>
-                                    <div className="flex gap-4 ml-11 text-xs sm:text-sm font-bold">
-                                        <span className="text-slate-400">YOU: <span className={`${item.isCorrect ? 'text-green-600' : 'text-red-500'}`}>{item.userAnswer}</span></span>
-                                    </div>
+                                    {revealMode === "each" && item.userAnswer !== null && (
+                                      <div className="flex gap-4 ml-11 text-xs sm:text-sm font-bold">
+                                          <span className="text-slate-400">YOU: <span className={`${item.isCorrect ? 'text-green-600' : 'text-red-500'}`}>{item.userAnswer}</span></span>
+                                      </div>
+                                    )}
                                 </div>
                                 <div className="text-2xl sm:text-3xl font-black w-24 text-right shrink-0">
                                     {isRevealed ? (
@@ -624,14 +709,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                        <button onClick={handleStart} className="w-full py-4 rounded-2xl bg-blue-200 text-violet-700 font-black text-xl shadow-md hover:bg-blue-300 active:scale-95 transition-all">
                           {t.playAgain}
                        </button>
-                       <div className="flex gap-3">
-                          <button onClick={handleBackToSettings} className="flex-1 py-3 rounded-xl bg-blue-100 text-violet-600 font-bold active:scale-95 transition-all">
-                             {t.settings}
-                          </button>
-                          <button onClick={goToMainMenu} className="flex-1 py-3 rounded-xl bg-blue-100 text-violet-600 font-bold active:scale-95 transition-all">
-                             {t.mainMenu}
-                          </button>
-                       </div>
+                       <button onClick={handleBackToSettings} className="w-full py-3 rounded-xl bg-blue-100 text-violet-600 font-bold active:scale-95 transition-all">
+                          {t.mainMenu}
+                       </button>
                     </div>
                 )}
             </div>
@@ -657,30 +737,50 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         </div>
       )}
 
-      {/* --- PHASE: INPUT (KEYPAD) --- */}
+      {/* --- PHASE: INPUT (KEYPAD for practice, NEXT/RESULTS for competition) --- */}
       {phase === "input" && (
          <div className="flex-1 w-full h-full flex flex-col items-center justify-center animate-in slide-in-from-bottom-10 fade-in duration-300">
-            {/* Display Input */}
-            <div className="mb-6 w-full max-w-xs sm:max-w-sm px-4">
-               <div className="bg-white rounded-2xl border-4 border-violet-100 h-20 sm:h-24 flex items-center justify-center shadow-inner">
-                  <span className="text-5xl sm:text-6xl font-black text-slate-800">{userInput || <span className="text-slate-200">?</span>}</span>
-               </div>
-            </div>
+            {revealMode === "each" ? (
+              <>
+                {/* Practice Mode: Display Input + Keypad */}
+                <div className="mb-6 w-full max-w-xs sm:max-w-sm px-4">
+                   <div className="bg-white rounded-2xl border-4 border-violet-100 h-20 sm:h-24 flex items-center justify-center shadow-inner">
+                      <span className="text-5xl sm:text-6xl font-black text-slate-800">{userInput || <span className="text-slate-200">?</span>}</span>
+                   </div>
+                </div>
 
-            {/* Keypad */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-xs sm:max-w-sm px-4">
-               {[7, 8, 9, 4, 5, 6, 1, 2, 3].map(num => (
-                  <button key={num} onClick={() => handleKeypadPress(num)} className="h-14 sm:h-16 bg-white rounded-xl shadow-md text-3xl font-bold text-slate-700 active:bg-slate-100 active:scale-95 transition-all">
-                     {num}
-                  </button>
-               ))}
-               <button onClick={() => handleKeypadPress(0)} className="col-span-2 h-14 sm:h-16 bg-white rounded-xl shadow-md text-3xl font-bold text-slate-700 active:bg-slate-100 active:scale-95 transition-all">0</button>
-               <button onClick={() => handleKeypadPress("DEL")} className="h-14 sm:h-16 bg-red-50 rounded-xl shadow-md text-xl font-bold text-red-500 active:scale-95 transition-all">DEL</button>
-            </div>
+                {/* Keypad */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-xs sm:max-w-sm px-4">
+                   {[7, 8, 9, 4, 5, 6, 1, 2, 3].map(num => (
+                      <button key={num} onClick={() => handleKeypadPress(num)} className="h-14 sm:h-16 bg-white rounded-xl shadow-md text-3xl font-bold text-slate-700 active:bg-slate-100 active:scale-95 transition-all">
+                         {num}
+                      </button>
+                   ))}
+                   <button onClick={() => handleKeypadPress(0)} className="col-span-2 h-14 sm:h-16 bg-white rounded-xl shadow-md text-3xl font-bold text-slate-700 active:bg-slate-100 active:scale-95 transition-all">0</button>
+                   <button onClick={() => handleKeypadPress("DEL")} className="h-14 sm:h-16 bg-red-50 rounded-xl shadow-md text-xl font-bold text-red-500 active:scale-95 transition-all">DEL</button>
+                </div>
 
-            <button onClick={handleSubmitAnswer} className="mt-6 w-full max-w-xs sm:max-w-sm px-4 py-4 rounded-2xl bg-pink-400 text-white font-black text-2xl shadow-md hover:bg-pink-500 active:scale-95 transition-all">
-               {t.submit}
-            </button>
+                <button onClick={handleSubmitAnswer} className="mt-6 w-full max-w-xs sm:max-w-sm px-4 py-4 rounded-2xl bg-pink-400 text-white font-black text-2xl shadow-md hover:bg-pink-500 active:scale-95 transition-all">
+                   {t.submit}
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Competition Mode: Show ? and Next/Results button */}
+                <div className="mb-8 w-full max-w-xs sm:max-w-sm px-4">
+                   <div className="bg-white rounded-3xl border-4 border-violet-100 h-32 sm:h-40 flex items-center justify-center shadow-inner">
+                      <span className="text-8xl sm:text-9xl font-black text-slate-200">?</span>
+                   </div>
+                </div>
+
+                <button
+                  onClick={handleCompetitionNext}
+                  className="w-full max-w-xs sm:max-w-sm px-4 py-5 rounded-2xl bg-pink-400 text-white font-black text-2xl shadow-md hover:bg-pink-500 active:scale-95 transition-all uppercase tracking-widest"
+                >
+                   {currentSetIndex + 1 >= totalRounds ? t.summary : t.nextSet}
+                </button>
+              </>
+            )}
          </div>
       )}
 

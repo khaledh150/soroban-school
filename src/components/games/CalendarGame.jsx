@@ -246,7 +246,8 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     };
   }, []);
 
-  const isMobileOrTablet = isCoarsePointer || vw <= 1024;
+  // Only require landscape on touch devices with small/medium screens (not PC)
+  const isMobileOrTablet = isCoarsePointer && vw <= 1024;
   const landscapeRequiredNow = isMobileOrTablet && !isLandscape;
 
   const stopAllSounds = () => {
@@ -411,16 +412,17 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     playSound("ready");
     setReadyText("GET");
 
-    // Sequence: 0.7s each for text.
+    // Sequence: 0.7s each for text, with GO! at the end
     const steps = [
       { t: 700, txt: "READY" },
       { t: 1400, txt: "3" },
       { t: 2100, txt: "2" },
       { t: 2800, txt: "1" },
-      { t: 3500, txt: null }, // Clear text, play Buzz
+      { t: 3500, txt: "GO!" }, // Add GO! like FlashcardGame
+      { t: 4400, txt: null }, // Clear and start game
     ];
 
-    steps.forEach(({ t, txt }) => {
+    steps.forEach(({ t: time, txt }) => {
       const id = setTimeout(() => {
         if (txt === null) {
           stopSound("ready");
@@ -433,7 +435,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         } else {
           setReadyText(txt);
         }
-      }, t);
+      }, time);
       timeoutsRef.current.push(id);
     });
   };
@@ -447,6 +449,24 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   };
 
 
+  // Exit fullscreen helper
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitFullscreenElement) {
+      document.webkitExitFullscreen?.();
+    }
+  };
+
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      exitFullscreen();
+    } else {
+      requestFullscreen();
+    }
+  };
+
   const handleExitToHome = () => {
     clearTimers();
     stopAllSounds();
@@ -455,12 +475,17 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     setShowConfetti(false);
     setLeverPulled(false);
     setReadyText("");
-    setPhase("settings");
     setDate(null);
     setRotateBlocked(false);
     setPendingStart(false);
 
-    navigate(-1); // Navigate back instead of page reload
+    // If in settings, go back to homepage; otherwise go to settings
+    if (phase === "settings") {
+      exitFullscreen();
+      navigate(-1);
+    } else {
+      setPhase("settings");
+    }
   };
 
   const handleBackSettings = () => {
@@ -496,6 +521,22 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         aria-label="Back"
       >
         <span className="text-2xl sm:text-3xl font-black text-slate-900">←</span>
+      </button>
+
+      {/* Fullscreen Toggle Button - Top Right */}
+      <button
+        onClick={toggleFullscreen}
+        className="
+          fixed top-3 right-3 sm:top-5 sm:right-5 z-[999]
+          w-12 h-12 sm:w-14 sm:h-14 rounded-full
+          bg-white/90 backdrop-blur-md border border-white/70
+          shadow-[0_12px_30px_rgba(0,0,0,0.18)]
+          flex items-center justify-center
+          hover:scale-105 active:scale-95 transition-all
+        "
+        aria-label="Fullscreen"
+      >
+        <span className="text-xl sm:text-2xl">⛶</span>
       </button>
 
       {/* ROTATE OVERLAY (Phone/Tablet only; blocks starting the game) */}
@@ -535,14 +576,14 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
       {/* --- PHASE: SETTINGS --- */}
       {phase === "settings" && (
-        <div className="flex-1 w-full flex items-center justify-center animate-in fade-in zoom-in duration-500">
+        <div className="flex-1 w-full flex items-center justify-center animate-in fade-in zoom-in duration-500 pt-16">
           <div className="
             bg-white/60 backdrop-blur-xl p-10 rounded-[3rem]
             shadow-[0_20px_70px_rgba(0,0,0,0.15)] border border-white/50
             max-w-xl w-full text-center flex flex-col gap-6
           ">
-            <h1 className="text-4xl font-black text-slate-800 tracking-tight">
-              GAME SETUP
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight uppercase">
+              {t.nadaCalendar}
             </h1>
 
             <div className="flex flex-col items-center gap-2">
@@ -602,7 +643,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
       {/* --- PHASE: SLOT MACHINE --- */}
       {(phase === "slot" || (phase === "answer" && date)) && (
-        <div className="flex-1 w-full flex flex-col items-center justify-start gap-6 animate-in fade-in duration-500 mt-4">
+        <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 animate-in fade-in duration-500 pt-16">
 
           <div className="bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full shadow-sm border border-white">
              <h2 className="text-2xl font-black text-slate-800 tracking-widest uppercase flex items-center gap-3">
@@ -661,13 +702,13 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
              </div>
           </div>
 
-          <div className="h-24 flex items-center justify-center w-full">
+          <div className="flex items-center justify-center w-full py-2 sm:py-4">
             {phase === "slot" && (
                 <button
                   onClick={handleShowAnswer}
                   disabled={!canShowAnswer}
                   className={`
-                    px-16 py-5 rounded-2xl font-black text-2xl tracking-widest uppercase transition-all duration-300
+                    px-10 sm:px-16 py-3 sm:py-5 rounded-2xl font-black text-xl sm:text-2xl tracking-widest uppercase transition-all duration-300
                     ${canShowAnswer
                       ? 'bg-pink-400 text-white shadow-md hover:scale-105 hover:bg-pink-500 animate-pulse-slow'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed scale-95 opacity-50'}
