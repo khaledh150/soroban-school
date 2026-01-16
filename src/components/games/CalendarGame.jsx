@@ -744,28 +744,29 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-lg p-4 sm:p-6 animate-in fade-in duration-500 pt-20 sm:pt-24 overflow-y-auto">
 
            <div className="
-             relative bg-white w-full max-w-2xl rounded-[3rem]
+             answer-panel
+             relative bg-white w-full max-w-2xl rounded-[2rem] sm:rounded-[3rem]
              shadow-[0_0_100px_rgba(59,130,246,0.2)]
-             overflow-hidden flex flex-col items-center p-7 sm:p-10 gap-5 max-h-[calc(100vh-170px)] sm:max-h-[calc(100vh-190px)]
-             animate-in zoom-in-95 duration-500 mb-8
+             overflow-hidden flex flex-col items-center p-5 sm:p-10 gap-3 sm:gap-5 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-190px)]
+             animate-in zoom-in-95 duration-500 mb-4 sm:mb-8
            ">
-              <div className="absolute top-0 left-0 w-full h-2 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500" />
+              <div className="absolute top-0 left-0 w-full h-1 sm:h-2 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500" />
 
               <div className="flex flex-col items-center">
-                <span className="text-slate-400 font-bold uppercase tracking-widest text-sm mb-2">Winning Date</span>
-                <h2 className="text-4xl sm:text-5xl font-black text-slate-800 uppercase tracking-tight">
+                <span className="text-slate-400 font-bold uppercase tracking-widest text-xs sm:text-sm mb-1 sm:mb-2">{t.winningDate}</span>
+                <h2 className="weekday-title text-2xl sm:text-5xl font-black text-slate-800 uppercase tracking-tight">
                   {weekdayName}
                 </h2>
-                <div className="text-2xl font-medium text-blue-600 mt-2 font-mono bg-blue-50 px-4 py-1 rounded-lg">
+                <div className="date-display text-lg sm:text-2xl font-medium text-blue-600 mt-1 sm:mt-2 font-mono bg-blue-50 px-3 sm:px-4 py-1 rounded-lg">
                   {pad2(date.day)} / {pad2(date.month)} / {displayYear}
                 </div>
               </div>
 
-              {/* Enlarged Calendar Grid */}
-              <div className="w-full bg-slate-50 rounded-3xl p-4 sm:p-5">
+              {/* Calendar Grid */}
+              <div className="calendar-grid w-full bg-slate-50 rounded-2xl sm:rounded-3xl p-2 sm:p-5">
                  <table className="w-full text-center border-collapse">
                     <thead>
-                       <tr>{t.weekdayShort.map(d => <th key={d} className="text-slate-400 text-xs sm:text-base uppercase font-bold pb-3">{d}</th>)}</tr>
+                       <tr>{t.weekdayShort.map(d => <th key={d} className="text-slate-400 text-[0.6rem] sm:text-base uppercase font-bold pb-1 sm:pb-3">{d}</th>)}</tr>
                     </thead>
                     <tbody>
                        {calendarWeeks.map((week, i) => (
@@ -773,20 +774,21 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
                              {week.map((cell, ci) => {
                                 const isTarget = cell === date.day;
                                 return (
-                                   <td key={ci} className="p-1 sm:p-2">
+                                   <td key={ci} className="p-0.5 sm:p-2">
                                       {cell && (
                                          <div
                                            className={`
-                                             w-11 h-11 sm:w-14 sm:h-14 mx-auto flex items-center justify-center rounded-2xl text-lg sm:text-2xl font-bold transition-all duration-500
+                                             day-cell
+                                             w-8 h-8 sm:w-14 sm:h-14 mx-auto flex items-center justify-center rounded-xl sm:rounded-2xl text-sm sm:text-2xl font-bold transition-all duration-500
                                              ${isTarget
-                                               ? 'bg-red-600 text-white shadow-xl shadow-red-600/40 scale-125 ring-4 ring-red-200 z-10 relative font-black animate-bounce'
+                                               ? 'target bg-red-600 text-white shadow-xl shadow-red-600/40 scale-110 sm:scale-125 ring-2 sm:ring-4 ring-red-200 z-10 relative font-black animate-bounce'
                                                : 'text-slate-500 hover:bg-white hover:shadow-sm'}
                                            `}
                                            style={{
                                              animation: isTarget ? 'bounce 1s infinite' : 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
                                              animationDelay: isTarget ? '0s' : `${(i * 7 + ci) * 0.03}s`,
                                              opacity: isTarget ? 1 : 0,
-                                             transform: isTarget ? 'scale(1.25)' : 'scale(0.5)'
+                                             transform: isTarget ? 'scale(1.1)' : 'scale(0.5)'
                                            }}
                                          >
                                             {cell}
@@ -802,12 +804,14 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
               </div>
            </div>
 
+           {/* Play Again Button - Floating on phone landscape */}
            <button
               onClick={startRound}
               className="
-                mb-8 px-10 py-4 rounded-2xl bg-blue-200 text-violet-700 font-black text-xl
+                play-again-float
+                mb-4 sm:mb-8 px-8 sm:px-10 py-3 sm:py-4 rounded-2xl bg-blue-200 text-violet-700 font-black text-lg sm:text-xl
                 shadow-md
-                hover:scale-105 hover:bg-blue-300 transition-all flex items-center gap-3
+                hover:scale-105 hover:bg-blue-300 transition-all flex items-center gap-2 sm:gap-3
               "
            >
               <span>🔄</span> {t.playAgain}
@@ -857,24 +861,64 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         /* Phone landscape mode - slot machine must fit viewport */
         @media (max-height: 500px) and (orientation: landscape) {
           .slot-container {
-            padding-top: 3.5rem !important;
-            gap: 0.5rem !important;
+            padding-top: 3rem !important;
+            gap: 0.25rem !important;
             justify-content: flex-start !important;
           }
           .slot-label {
             display: none !important;
           }
           .slot-machine-wrapper {
-            transform: scale(0.65);
-            transform-origin: top center;
-            margin-top: -1rem;
+            transform: scale(0.55) !important;
+            transform-origin: top center !important;
+            margin-top: -0.5rem !important;
+            transition: none !important;
+            max-width: 95vw !important;
           }
           .reveal-btn-container {
             padding: 0.25rem 0 !important;
+            margin-top: -2rem !important;
           }
           .reveal-btn-container button {
             padding: 0.5rem 2rem !important;
             font-size: 1rem !important;
+          }
+          /* Results panel for phone landscape */
+          .answer-panel {
+            max-height: 70vh !important;
+            padding: 1rem !important;
+            gap: 0.5rem !important;
+          }
+          .answer-panel .calendar-grid {
+            padding: 0.5rem !important;
+          }
+          .answer-panel .calendar-grid td {
+            padding: 0.125rem !important;
+          }
+          .answer-panel .calendar-grid .day-cell {
+            width: 1.75rem !important;
+            height: 1.75rem !important;
+            font-size: 0.75rem !important;
+          }
+          .answer-panel .calendar-grid .day-cell.target {
+            transform: scale(1.1) !important;
+          }
+          .answer-panel .weekday-title {
+            font-size: 1.5rem !important;
+          }
+          .answer-panel .date-display {
+            font-size: 1rem !important;
+          }
+          /* Floating play again button */
+          .play-again-float {
+            position: fixed !important;
+            bottom: 1rem !important;
+            right: 1rem !important;
+            z-index: 100 !important;
+            margin: 0 !important;
+            padding: 0.75rem 1.5rem !important;
+            font-size: 0.875rem !important;
+            border-radius: 9999px !important;
           }
         }
       `}</style>

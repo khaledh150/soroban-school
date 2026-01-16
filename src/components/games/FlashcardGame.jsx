@@ -813,17 +813,34 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       {/* --- PHASE: FEEDBACK (Practice Result) --- */}
       {phase === "feedback" && (
          <div className="flex-1 w-full flex flex-col items-center justify-center pb-12">
-             <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300">
-                 <div className="font-black drop-shadow-2xl" style={{ fontSize: 'min(22vh, 35vw)', color: feedbackStatus === 'correct' ? '#22c55e' : '#ef4444' }}>
-                     {feedbackStatus === 'correct' ? '✓' : '✗'}
-                 </div>
-                 <h2 className="text-4xl sm:text-5xl font-black text-slate-800 mt-2 mb-2">
-                     {feedbackStatus === 'correct' ? t.correct : t.wrong}
-                 </h2>
-                 {feedbackStatus === 'wrong' && (
-                     <div className="text-4xl sm:text-5xl font-black text-emerald-500 mt-2">
-                        {actualAnswer}
+             {/* All elements in ONE container - they all appear/disappear together */}
+             <div className="feedback-container flex flex-col items-center justify-center">
+                 {feedbackStatus === 'correct' ? (
+                   <>
+                     {/* CORRECT: Green tick and CORRECT text */}
+                     <div className="font-black drop-shadow-2xl text-green-500" style={{ fontSize: 'min(28vh, 45vw)' }}>
+                         ✓
                      </div>
+                     <h2 className="text-5xl sm:text-6xl font-black text-green-500 mt-2 uppercase tracking-wider">
+                         {t.correct}
+                     </h2>
+                   </>
+                 ) : (
+                   <>
+                     {/* WRONG: Red X, WRONG text, and correct answer */}
+                     <div className="font-black drop-shadow-2xl text-red-500" style={{ fontSize: 'min(28vh, 45vw)' }}>
+                         ✗
+                     </div>
+                     <h2 className="text-5xl sm:text-6xl font-black text-red-500 mt-2 uppercase tracking-wider">
+                         {t.wrong}
+                     </h2>
+                     <div className="mt-4 flex flex-col items-center">
+                        <span className="text-lg text-slate-400 font-bold uppercase tracking-widest">{t.answerWas}</span>
+                        <span className="text-5xl sm:text-6xl font-black text-emerald-500 mt-1">
+                           {actualAnswer}
+                        </span>
+                     </div>
+                   </>
                  )}
              </div>
          </div>
@@ -845,6 +862,15 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         }
         .animate-pop-in {
           animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        /* Feedback container - all elements animate together */
+        .feedback-container {
+          animation: feedbackIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes feedbackIn {
+          0% { transform: scale(0.5); opacity: 0; }
+          60% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
         }
         /* Ready overlay - same sizing as QuizPage */
         .ready-number {
