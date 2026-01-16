@@ -861,7 +861,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         /* Phone landscape mode - slot machine must fit viewport */
         @media (max-height: 500px) and (orientation: landscape) {
           .slot-container {
-            padding-top: 2.5rem !important;
+            padding-top: 3.5rem !important;
             gap: 0 !important;
             justify-content: flex-start !important;
           }
@@ -869,9 +869,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             display: none !important;
           }
           .slot-machine-wrapper {
-            transform: scale(0.72) !important;
+            transform: scale(0.75) scaleX(1.15) !important;
             transform-origin: top center !important;
-            margin-top: 0 !important;
+            margin-top: 0.5rem !important;
             transition: none !important;
             max-width: 100vw !important;
             width: 95vw !important;
@@ -891,36 +891,44 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             font-size: 0.8rem !important;
             border-radius: 9999px !important;
           }
-          /* Results panel for phone landscape - much taller to show full calendar */
+          /* Results panel for phone landscape - no container, full view */
           .answer-panel {
-            max-height: 95vh !important;
+            max-height: none !important;
             height: auto !important;
-            padding: 0.75rem !important;
+            padding: 0.5rem !important;
             gap: 0.25rem !important;
             margin-top: 2.5rem !important;
-            overflow-y: auto !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
           }
           .answer-panel .calendar-grid {
             padding: 0.25rem !important;
+            background: white !important;
+            border-radius: 1rem !important;
           }
           .answer-panel .calendar-grid td {
             padding: 0.1rem !important;
           }
           .answer-panel .calendar-grid .day-cell {
-            width: 1.5rem !important;
-            height: 1.5rem !important;
-            font-size: 0.65rem !important;
+            width: 1.6rem !important;
+            height: 1.6rem !important;
+            font-size: 0.7rem !important;
             border-radius: 0.375rem !important;
           }
           .answer-panel .calendar-grid .day-cell.target {
             transform: scale(1.1) !important;
           }
           .answer-panel .weekday-title {
-            font-size: 1.25rem !important;
+            font-size: 1.5rem !important;
+            color: white !important;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
           }
           .answer-panel .date-display {
-            font-size: 0.875rem !important;
-            padding: 0.25rem 0.5rem !important;
+            font-size: 1rem !important;
+            padding: 0.25rem 0.75rem !important;
+            background: white !important;
+            border-radius: 0.5rem !important;
           }
           /* Floating play again button */
           .play-again-float {
@@ -932,6 +940,13 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             padding: 0.6rem 1.25rem !important;
             font-size: 0.8rem !important;
             border-radius: 9999px !important;
+          }
+          /* Bigger ready countdown for phone landscape */
+          .ready-number {
+            font-size: 8rem !important;
+          }
+          .ready-word {
+            font-size: 6rem !important;
           }
         }
       `}</style>
