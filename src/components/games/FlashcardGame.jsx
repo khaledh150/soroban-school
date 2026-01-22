@@ -94,6 +94,10 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const currentUtteranceRef = useRef(null);
 
   useEffect(() => {
+    // Load all audio assets on mount to prevent PC playback delays
+    Object.values(audioRefs.current).forEach(audio => {
+      if (audio) audio.load();
+    });
     // Volume adjustments
     if (audioRefs.current.tick) audioRefs.current.tick.volume = 0.7;
     if (audioRefs.current.ding) audioRefs.current.ding.volume = 1.0;
@@ -307,9 +311,10 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         speakEquals();
 
         // Transition to input immediately to show the "?" in the input box
-        setTimeout(() => {
+        const id = setTimeout(() => {
           if (isMounted.current) setPhase("input");
         }, 200);
+        timeoutsRef.current.push(id);
         return;
       }
 
@@ -322,7 +327,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       playSound("tick");
 
       // Speak number with callback to continue sequence
-      if (ttsEnabled && !settings.mute) {
+      if (ttsEnabled) {
         window.speechSynthesis.cancel();
 
         // Build speech text
@@ -353,6 +358,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
         // Wait for speech to finish before flashing next number
         utterance.onend = () => {
+          if (!isMounted.current) return;
           currentUtteranceRef.current = null;
           currentIdx++;
           const id = setTimeout(flashNext, 100); // Small delay after speech
@@ -360,6 +366,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         };
 
         utterance.onerror = () => {
+          if (!isMounted.current) return;
           currentUtteranceRef.current = null;
           currentIdx++;
           const id = setTimeout(flashNext, Math.max(speed, 0.4) * 1000);
@@ -812,7 +819,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
              </div>
 
              {/* Progress Dots */}
-             <div className="absolute bottom-20 sm:bottom-12 flex gap-3 z-30">
+             <div className="absolute bottom-24 sm:bottom-20 left-1/2 -translate-x-1/2 flex gap-3 z-30">
                {Array.from({length: Math.max(1, Math.min(numbersPerSet, 20))}).map((_, i) => (
                  <div
                    key={i}
