@@ -171,8 +171,13 @@ export default function QuizPage() {
   const [inputLocked, setInputLocked] = useState(true);
   const [timerText, setTimerText] = useState("10:00");
   const [scoreText, setScoreText] = useState("");
-  const [resultsData, setResultsData] = useState([]); 
+  const [resultsData, setResultsData] = useState([]);
   const [isMascotBouncing, setIsMascotBouncing] = useState(false);
+
+  // PC Focus Mode
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [isPC, setIsPC] = useState(false);
+  const answerInputRef = useRef(null);
 
   const [settings, setSettings] = useState({
     numQuestions: 20,
@@ -329,10 +334,35 @@ export default function QuizPage() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // PC Detection
+  useEffect(() => {
+    const checkPC = () => {
+      const hasFinePointer = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+      setIsPC(hasFinePointer);
+    };
+    checkPC();
+    window.addEventListener('resize', checkPC);
+    return () => window.removeEventListener('resize', checkPC);
+  }, []);
+
+  // Auto-focus answer input in Focus Mode
+  useEffect(() => {
+    if (isFocusMode && isPC && answerInputRef.current && view === 'quiz') {
+      answerInputRef.current.focus();
+    }
+  }, [isFocusMode, isPC, view, inputLocked]);
+
   // Keyboard
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (view !== 'quiz') return;
+
+      // ESC key exits focus mode on PC
+      if (e.key === 'Escape' && isPC && isFocusMode) {
+        setIsFocusMode(false);
+        return;
+      }
+
       if (e.key === 'Enter') { e.preventDefault(); handleSubmitAnswer(); }
       else if (e.key === 'Backspace') handleAppendDigit('BACK');
       else if (e.key === '.') handleAppendDigit('.');
@@ -341,7 +371,7 @@ export default function QuizPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, inputLocked, inputValue]);
+  }, [view, inputLocked, inputValue, isPC, isFocusMode]);
 
   // --- GLOBAL CLEANUP ---
   useEffect(() => {
@@ -356,6 +386,7 @@ export default function QuizPage() {
 
   const goHome = () => {
     stopAllAudio();
+    setIsFocusMode(false);
     navigate(`/?level=${currentLevel}&chapter=${currentChapter}`);
   };
 
@@ -697,6 +728,7 @@ export default function QuizPage() {
   const finishQuiz = (isTimeUp) => {
     if (gameState.current.timerInterval) clearInterval(gameState.current.timerInterval);
     stopAllAudio();
+    setIsFocusMode(false);
     const answers = gameState.current.answers;
     const correctCount = answers.filter(a => a.user === a.correct).length;
     const total = answers.length;
@@ -723,12 +755,87 @@ export default function QuizPage() {
     <div className="quiz-root-container">
       <style>{`
         .quiz-root-container { display: flex; flex-direction: row; width: 100vw; height: 100vh; overflow: hidden; background: #d8e9fa; font-family: 'Nunito', sans-serif; transition: background 0.3s; }
-        
+
         .rain-sparkle { pointer-events: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; }
-        .quiz-panel { display: flex; flex-direction: column; width: clamp(320px, 30vw, 460px); height: 100%; background: linear-gradient(150deg, #fef5fa 65%, #f6f3fa 100%, #e6eaff 0%); padding: 1rem; box-sizing: border-box; box-shadow: 5px 0 20px rgba(0,0,0,0.08); z-index: 20; position: relative; }
-        .soroban-container { position: relative; flex: 1; height: 100%; background: transparent; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .quiz-panel { display: flex; flex-direction: column; width: clamp(320px, 30vw, 460px); height: 100%; background: linear-gradient(150deg, #fef5fa 65%, #f6f3fa 100%, #e6eaff 0%); padding: 1rem; box-sizing: border-box; box-shadow: 5px 0 20px rgba(0,0,0,0.08); z-index: 20; position: relative; transition: all 0.3s ease; }
+        .soroban-container { position: relative; flex: 1; height: 100%; background: transparent; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: all 0.3s ease; }
         .soroban-container .soroban { transform: scale(1.45); transform-origin: center; }
         .flash-area { flex: 1; display: flex; justify-content: center; align-items: center; text-align: center; width: 100%; overflow: hidden; }
+
+        /* PC Focus Mode - Only applies when (pointer: fine) is true */
+        @media (pointer: fine) {
+          .quiz-panel.focus-mode {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            box-shadow: none !important;
+          }
+          .soroban-container.hidden-focus { display: none !important; }
+          .flash-area.focus-mode {
+            flex: 1;
+            height: auto;
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+          }
+          .numpad-grid.hidden-focus { display: none !important; }
+          .focus-mode-input-wrapper {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 600px;
+            z-index: 30;
+          }
+          .bottom-controls.hidden-focus { display: none !important; }
+
+          .focus-btn {
+            background: linear-gradient(135deg, #22d3ee 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(37, 99, 235, 0.4);
+            transition: transform 0.1s, box-shadow 0.2s;
+            flex-shrink: 0;
+          }
+          .focus-btn:hover { box-shadow: 0 5px 18px rgba(37, 99, 235, 0.6); }
+          .focus-btn:active { transform: scale(0.95); }
+          .focus-btn.active {
+            background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+            box-shadow: 0 3px 12px rgba(236, 72, 153, 0.4);
+          }
+
+          .fullscreen-btn-pc {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 999;
+            background: #b4d7ff;
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+          }
+          .fullscreen-btn-pc:hover { transform: scale(1.05); }
+          .fullscreen-btn-pc:active { transform: scale(0.95); background: #fd90d7; color: #fff; }
+        }
         
         /* Text Sizes (Default) */
         .flash-token { font-size: clamp(6rem, 15vw, 10rem); font-weight: 900; color: #4d79ff; line-height: 1; }
@@ -994,9 +1101,16 @@ export default function QuizPage() {
         </div>
       )}
 
+      {/* === FULLSCREEN BUTTON (PC ONLY) === */}
+      {view === 'quiz' && isPC && !isIOS() && (
+        <button className="fullscreen-btn-pc" onClick={toggleFullscreen} aria-label="Toggle Fullscreen">
+          ⛶
+        </button>
+      )}
+
       {/* === QUIZ PANEL === */}
       {view === 'quiz' && (
-        <div className="quiz-panel">
+        <div className={`quiz-panel ${isFocusMode && isPC ? 'focus-mode' : ''}`}>
           <div className="top-bar">
               <div className="top-bar-left">
                   <button className="back-pill" onClick={goHome}><span>←</span></button>
@@ -1005,7 +1119,18 @@ export default function QuizPage() {
               <div style={{display:'flex', gap:'8px'}}>
                   <button className="icon-btn" onClick={() => setView("settings")}>⚙️</button>
                   <button className="icon-btn" onClick={resetBoard}>↻</button>
-                  <button className="icon-btn" onClick={toggleFullscreen}>⛶</button>
+                  {isPC ? (
+                    <button
+                      className={`focus-btn ${isFocusMode ? 'active' : ''}`}
+                      onClick={() => setIsFocusMode(!isFocusMode)}
+                      aria-label="Toggle Focus Mode"
+                      title="Quiz Focus Mode"
+                    >
+                      {isFocusMode ? '⊠' : '◉'}
+                    </button>
+                  ) : (
+                    <button className="icon-btn" onClick={toggleFullscreen}>⛶</button>
+                  )}
               </div>
           </div>
           <div className="status-row">
@@ -1015,25 +1140,58 @@ export default function QuizPage() {
                 {timerText}
               </div>
           </div>
-          <div className="flash-area">
+          <div className={`flash-area ${isFocusMode && isPC ? 'focus-mode' : ''}`}>
               {flashContent}
           </div>
-          <div className="bottom-controls">
+
+          {/* Focus Mode Input (Fixed at bottom in focus mode) */}
+          {isFocusMode && isPC ? (
+            <div className="focus-mode-input-wrapper">
+              <div className="input-row">
+                  <input
+                    ref={answerInputRef}
+                    type="text"
+                    inputMode="decimal"
+                    value={inputValue}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      // Allow only numbers and decimal point, max 8 chars
+                      if (/^[0-9.]*$/.test(val) && val.length <= 8) {
+                        setInputValue(val);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSubmitAnswer();
+                      }
+                    }}
+                    disabled={inputLocked}
+                    className="answer-box"
+                    style={{textAlign: 'right', outline: 'none', border: 'none', background: '#fff', cursor: inputLocked ? 'not-allowed' : 'text'}}
+                    placeholder={inputLocked ? '' : '?'}
+                  />
+                  <button className="send-btn" onClick={handleSubmitAnswer} disabled={inputLocked || !inputValue}>{t.send}</button>
+              </div>
+            </div>
+          ) : (
+            <div className="bottom-controls">
               <div className="input-row">
                   <div className="answer-box">{inputValue}</div>
                   <button className="send-btn" onClick={handleSubmitAnswer} disabled={inputLocked || !inputValue}>{t.send}</button>
               </div>
-              <div className="numpad-grid">
+              <div className={`numpad-grid ${isFocusMode && isPC ? 'hidden-focus' : ''}`}>
                   {["1","2","3","4","5","6","7","8","9",".","0","BACK"].map(key => (
                       <button key={key} className="num-btn" onClick={() => handleAppendDigit(key)}>{key === "BACK" ? "⌫" : key}</button>
                   ))}
               </div>
-          </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* === SOROBAN PANEL === */}
-      <div className="soroban-container">
+      <div className={`soroban-container ${isFocusMode && isPC ? 'hidden-focus' : ''}`}>
           <SorobanBoard ref={sorobanRef} />
       </div>
 
