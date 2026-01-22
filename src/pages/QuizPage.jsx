@@ -1251,8 +1251,8 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* === FULLSCREEN BUTTON (PC ONLY) - Always visible === */}
-      {view === 'quiz' && isPC && !isIOS() && (
+      {/* === FULLSCREEN BUTTON (PC ONLY) - Hidden in focus mode === */}
+      {view === 'quiz' && isPC && !isIOS() && !isFocusMode && (
         <button className="fullscreen-btn-pc" onClick={toggleFullscreen} aria-label="Toggle Fullscreen">
           ⛶
         </button>
