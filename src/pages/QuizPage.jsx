@@ -779,15 +779,35 @@ export default function QuizPage() {
             box-shadow: none !important;
             padding: 1.5rem 2rem !important;
           }
+          .quiz-panel.focus-mode .top-bar {
+            margin-bottom: 0.5rem !important;
+          }
+          .quiz-panel.focus-mode .status-row {
+            font-size: 1.5rem !important;
+            margin-bottom: 1rem !important;
+          }
+          .quiz-panel.focus-mode .status-row > div:first-child {
+            font-size: 1.8rem !important;
+            padding: 6px 20px !important;
+          }
+          .quiz-panel.focus-mode .status-row svg {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .quiz-panel.focus-mode .chapter-title {
+            font-size: 1.1rem !important;
+            padding: 8px 18px !important;
+          }
           .soroban-container.hidden-focus { display: none !important; }
           .flash-area.focus-mode {
             flex: 1;
             height: auto;
-            min-height: 65vh;
+            min-height: 60vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 3rem;
+            padding: 2rem;
+            margin-top: -5vh;
           }
           .numpad-grid.hidden-focus { display: none !important; }
           .focus-mode-input-wrapper {
@@ -806,27 +826,28 @@ export default function QuizPage() {
           }
           .bottom-controls.hidden-focus { display: none !important; }
 
-          /* Focus Mode - Substantially Larger Text Sizes */
+          /* Focus Mode - MUCH Larger Text Sizes */
           .focus-mode .flash-token {
-            font-size: clamp(12rem, 25vw, 20rem) !important;
+            font-size: clamp(18rem, 35vw, 30rem) !important;
           }
           .focus-mode .flash-op {
-            font-size: 0.5em !important;
+            font-size: 0.45em !important;
+            margin-right: 0.2em !important;
           }
           .focus-mode .flash-qmark {
-            font-size: clamp(14rem, 30vw, 24rem) !important;
+            font-size: clamp(20rem, 40vw, 35rem) !important;
           }
           .focus-mode .flash-multiplication,
           .focus-mode .static-multiplication {
-            font-size: clamp(8rem, 18vw, 14rem) !important;
+            font-size: clamp(12rem, 24vw, 20rem) !important;
             letter-spacing: -0.02em !important;
           }
           .focus-mode .flash-blank,
           .focus-mode .static-blank {
-            font-size: clamp(6rem, 14vw, 11rem) !important;
+            font-size: clamp(10rem, 20vw, 16rem) !important;
           }
           .focus-mode .flash-decimal {
-            font-size: clamp(10rem, 20vw, 16rem) !important;
+            font-size: clamp(14rem, 28vw, 24rem) !important;
           }
           .focus-mode .feedback-icon {
             font-size: clamp(14rem, 30vw, 24rem) !important;
@@ -836,10 +857,13 @@ export default function QuizPage() {
             margin-top: 1rem !important;
           }
           .focus-mode .static-question {
-            font-size: clamp(6rem, 14vw, 12rem) !important;
+            font-size: clamp(10rem, 20vw, 16rem) !important;
           }
           .focus-mode .ready-go-text {
             font-size: clamp(12rem, 25vw, 20rem) !important;
+          }
+          .focus-mode .feedback-container {
+            margin-top: -8vh !important;
           }
 
           .focus-btn {
@@ -885,31 +909,6 @@ export default function QuizPage() {
           }
           .fullscreen-btn-pc:hover { transform: scale(1.05); }
           .fullscreen-btn-pc:active { transform: scale(0.95); background: #fd90d7; color: #fff; }
-
-          .focus-btn-top {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 999;
-            background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            cursor: pointer;
-            box-shadow: 0 3px 12px rgba(236, 72, 153, 0.4);
-            transition: transform 0.1s, box-shadow 0.2s;
-          }
-          .focus-btn-top:hover {
-            box-shadow: 0 5px 18px rgba(236, 72, 153, 0.6);
-            transform: scale(1.05);
-          }
-          .focus-btn-top:active { transform: scale(0.95); }
         }
         
         /* Text Sizes (Default) */
@@ -1175,10 +1174,38 @@ export default function QuizPage() {
             font-size: 2rem !important;
             margin: 1.5rem 0 !important;
           }
-          .results-card.focus-results .results-footer button {
-            font-size: 1.5rem !important;
-            padding: 1rem 2.5rem !important;
+          .results-card.focus-results .results-footer {
+            display: flex !important;
+            gap: 1rem !important;
+            justify-content: center !important;
+            align-items: center !important;
           }
+          .results-card.focus-results .results-footer button {
+            font-size: 1.3rem !important;
+            padding: 0.8rem 2rem !important;
+            min-width: 150px !important;
+            height: auto !important;
+          }
+        }
+
+        /* Results Footer - Fix button alignment for all modes */
+        .results-footer {
+          display: flex !important;
+          gap: 0.8rem !important;
+          justify-content: center !important;
+          align-items: center !important;
+          flex-wrap: wrap !important;
+        }
+        .results-footer button,
+        .results-footer .back-pill {
+          font-size: 1.1rem !important;
+          padding: 0.6rem 1.5rem !important;
+          min-width: 120px !important;
+          height: auto !important;
+          min-height: 2.5rem !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
         }
 
         @media (max-width: 400px) {
@@ -1224,22 +1251,10 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* === FULLSCREEN BUTTON (PC ONLY) - Hidden in focus mode === */}
-      {view === 'quiz' && isPC && !isIOS() && !isFocusMode && (
+      {/* === FULLSCREEN BUTTON (PC ONLY) - Always visible === */}
+      {view === 'quiz' && isPC && !isIOS() && (
         <button className="fullscreen-btn-pc" onClick={toggleFullscreen} aria-label="Toggle Fullscreen">
           ⛶
-        </button>
-      )}
-
-      {/* === EXIT FOCUS MODE BUTTON (Top-right when in focus mode) === */}
-      {view === 'quiz' && isPC && isFocusMode && (
-        <button
-          className="focus-btn-top"
-          onClick={() => setIsFocusMode(false)}
-          aria-label="Exit Focus Mode"
-          title="Exit Focus Mode (ESC)"
-        >
-          ⊠
         </button>
       )}
 
@@ -1251,18 +1266,29 @@ export default function QuizPage() {
                   <button className="back-pill" onClick={goHome}><span>←</span></button>
                   <span className="chapter-title">{getChapterTitle()}</span>
               </div>
-              <div style={{display:'flex', gap:'8px'}}>
+              <div style={{display:'flex', gap:'8px', alignItems:'center'}}>
                   <button className="icon-btn" onClick={() => setView("settings")}>⚙️</button>
                   {!isFocusMode && <button className="icon-btn" onClick={resetBoard}>↻</button>}
-                  {isPC && !isFocusMode && (
-                    <button
-                      className="focus-btn"
-                      onClick={() => setIsFocusMode(true)}
-                      aria-label="Enter Focus Mode"
-                      title="Enter Focus Mode"
-                    >
-                      ◉
-                    </button>
+                  {isPC && (
+                    isFocusMode ? (
+                      <button
+                        className="focus-btn active"
+                        onClick={() => setIsFocusMode(false)}
+                        aria-label="Exit Focus Mode"
+                        title="Exit Focus Mode (ESC)"
+                      >
+                        ✕
+                      </button>
+                    ) : (
+                      <button
+                        className="focus-btn"
+                        onClick={() => setIsFocusMode(true)}
+                        aria-label="Enter Focus Mode"
+                        title="Enter Focus Mode"
+                      >
+                        ◉
+                      </button>
+                    )
                   )}
                   {!isPC && <button className="icon-btn" onClick={toggleFullscreen}>⛶</button>}
               </div>
