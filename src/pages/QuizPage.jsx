@@ -885,6 +885,31 @@ export default function QuizPage() {
           }
           .fullscreen-btn-pc:hover { transform: scale(1.05); }
           .fullscreen-btn-pc:active { transform: scale(0.95); background: #fd90d7; color: #fff; }
+
+          .focus-btn-top {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 999;
+            background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(236, 72, 153, 0.4);
+            transition: transform 0.1s, box-shadow 0.2s;
+          }
+          .focus-btn-top:hover {
+            box-shadow: 0 5px 18px rgba(236, 72, 153, 0.6);
+            transform: scale(1.05);
+          }
+          .focus-btn-top:active { transform: scale(0.95); }
         }
         
         /* Text Sizes (Default) */
@@ -1199,10 +1224,22 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* === FULLSCREEN BUTTON (PC ONLY) === */}
-      {view === 'quiz' && isPC && !isIOS() && (
+      {/* === FULLSCREEN BUTTON (PC ONLY) - Hidden in focus mode === */}
+      {view === 'quiz' && isPC && !isIOS() && !isFocusMode && (
         <button className="fullscreen-btn-pc" onClick={toggleFullscreen} aria-label="Toggle Fullscreen">
           ⛶
+        </button>
+      )}
+
+      {/* === EXIT FOCUS MODE BUTTON (Top-right when in focus mode) === */}
+      {view === 'quiz' && isPC && isFocusMode && (
+        <button
+          className="focus-btn-top"
+          onClick={() => setIsFocusMode(false)}
+          aria-label="Exit Focus Mode"
+          title="Exit Focus Mode (ESC)"
+        >
+          ⊠
         </button>
       )}
 
@@ -1217,14 +1254,14 @@ export default function QuizPage() {
               <div style={{display:'flex', gap:'8px'}}>
                   <button className="icon-btn" onClick={() => setView("settings")}>⚙️</button>
                   {!isFocusMode && <button className="icon-btn" onClick={resetBoard}>↻</button>}
-                  {isPC && (
+                  {isPC && !isFocusMode && (
                     <button
-                      className={`focus-btn ${isFocusMode ? 'active' : ''}`}
-                      onClick={() => setIsFocusMode(!isFocusMode)}
-                      aria-label="Toggle Focus Mode"
-                      title={isFocusMode ? "Exit Focus Mode (ESC)" : "Enter Focus Mode"}
+                      className="focus-btn"
+                      onClick={() => setIsFocusMode(true)}
+                      aria-label="Enter Focus Mode"
+                      title="Enter Focus Mode"
                     >
-                      {isFocusMode ? '⊠' : '◉'}
+                      ◉
                     </button>
                   )}
                   {!isPC && <button className="icon-btn" onClick={toggleFullscreen}>⛶</button>}
