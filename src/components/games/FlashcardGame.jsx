@@ -265,12 +265,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
        setActualAnswer(ans);
     }
 
-    // Play audio at start (same as QuizPage)
-    playSound("ready");
-
     // Visual Sequence Logic - EXACT same as QuizPage showReadySetGo
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
+
+    // Play audio at start (same as QuizPage - play BEFORE sequence starts)
+    playSound("ready");
 
     const runSeq = () => {
         if (!isMounted.current) return;
@@ -329,6 +329,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       }
 
       const num = gameSetsRef.current[forcedIndex][currentIdx];
+      const flashStartTime = performance.now();
+      const targetDelay = Math.max(speed, 0.4) * 1000;
 
       // Update display
       setCurrentNumberIndex(currentIdx);
@@ -339,10 +341,13 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       // Speak number and wait for speech to finish before continuing
       speakNumber(num, () => {
         if (!isMounted.current) return;
+
+        // Calculate remaining time based on speed setting
+        const elapsed = performance.now() - flashStartTime;
+        const remainingDelay = Math.max(0, targetDelay - elapsed);
+
         currentIdx++;
-        // Small delay after speech, or use speed setting if TTS is disabled
-        const delay = ttsEnabled ? 100 : Math.max(speed, 0.4) * 1000;
-        const id = setTimeout(flashNext, delay);
+        const id = setTimeout(flashNext, remainingDelay);
         timeoutsRef.current.push(id);
       });
     };

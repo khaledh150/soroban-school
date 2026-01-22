@@ -438,28 +438,26 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
     setPhase("getready");
 
-    // Play audio at start (same as QuizPage)
-    playSound("ready");
-
     // Visual Sequence Logic - EXACT same as QuizPage showReadySetGo
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
 
-    const text = seq[i];
-    const isWord = text.length > 1;
-    setReadyText(text);
-    setIsReadyWord(isWord);
+    // Play audio at start (same as QuizPage - play BEFORE setting initial text)
+    playSound("ready");
 
     const runSeq = () => {
+        if (!isMounted.current) return;
+
+        const text = seq[i];
+        const isWord = text.length > 1;
+        setReadyText(text);
+        setIsReadyWord(isWord);
+
         const delay = 800; // Same timing as QuizPage
 
         if (i < seq.length - 1) {
             const id = setTimeout(() => {
                 i++;
-                const nextText = seq[i];
-                const nextIsWord = nextText.length > 1;
-                setReadyText(nextText);
-                setIsReadyWord(nextIsWord);
                 runSeq();
             }, delay);
             timeoutsRef.current.push(id);
@@ -917,13 +915,14 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             font-size: 0.8rem !important;
             border-radius: 9999px !important;
           }
-          /* Results panel for phone landscape - no container, full view */
+          /* Results panel for phone landscape - compact to fit */
           .answer-panel {
-            max-height: none !important;
+            max-height: 90vh !important;
             height: auto !important;
-            padding: 0.5rem !important;
+            padding: 0.5rem 0.75rem !important;
             gap: 0.25rem !important;
-            margin-top: 2.5rem !important;
+            margin-top: 0 !important;
+            padding-top: 3.5rem !important;
             background: transparent !important;
             box-shadow: none !important;
             border-radius: 0 !important;
