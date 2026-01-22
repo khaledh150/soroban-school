@@ -260,6 +260,24 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     });
   };
 
+  const unlockAudio = () => {
+    // Unlock HTML5 Audio elements
+    Object.values(audioRefs.current).forEach(audio => {
+      if (audio) {
+        audio.play().then(() => audio.pause()).catch(() => {});
+      }
+    });
+
+    // Unlock Web Speech API
+    try {
+      const unlock = new SpeechSynthesisUtterance(" ");
+      unlock.volume = 0.01;
+      window.speechSynthesis.speak(unlock);
+    } catch (e) {
+      // Silently fail if speech API not available
+    }
+  };
+
   // If user rotates to portrait during gameplay on mobile/tablet, stop and return to settings.
   useEffect(() => {
     if (!isMobileOrTablet) return;
@@ -279,6 +297,10 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   }, [isMobileOrTablet, isLandscape, phase]);
 
   useEffect(() => {
+    // Load all audio assets on mount to prevent PC playback delays
+    Object.values(audioRefs.current).forEach(audio => {
+      if (audio) audio.load();
+    });
     audioRefs.current.roulette.volume = 0.6;
     audioRefs.current.roulette.loop = true;
   }, []);
@@ -363,6 +385,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
 
   const startRound = () => {
+    // Unlock audio on user interaction
+    unlockAudio();
+
     // Always request fullscreen on any device when clicking spin
     requestFullscreen();
 
@@ -377,6 +402,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
   const resumeAfterRotate = () => {
     // User tap to continue (required to reliably unlock audio on mobile browsers)
+    unlockAudio();
     setRotateBlocked(false);
     setPendingStart(false);
     startRoundActual();
@@ -947,6 +973,26 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
           }
           .ready-word {
             font-size: 6rem !important;
+          }
+        }
+
+        /* Tablet landscape mode - move buttons to bottom-right */
+        @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+          .reveal-btn-container {
+            position: fixed !important;
+            bottom: 1.5rem !important;
+            right: 1.5rem !important;
+            width: auto !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            z-index: 100 !important;
+          }
+          .play-again-float {
+            position: fixed !important;
+            bottom: 1.5rem !important;
+            right: 1.5rem !important;
+            z-index: 100 !important;
+            margin: 0 !important;
           }
         }
       `}</style>

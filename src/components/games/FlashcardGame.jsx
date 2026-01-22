@@ -213,6 +213,24 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     } catch (e) { console.error(e); }
   };
 
+  const unlockAudio = () => {
+    // Unlock HTML5 Audio elements
+    Object.values(audioRefs.current).forEach(audio => {
+      if (audio) {
+        audio.play().then(() => audio.pause()).catch(() => {});
+      }
+    });
+
+    // Unlock Web Speech API
+    try {
+      const unlock = new SpeechSynthesisUtterance(" ");
+      unlock.volume = 0.01;
+      window.speechSynthesis.speak(unlock);
+    } catch (e) {
+      // Silently fail if speech API not available
+    }
+  };
+
   // --- GAME LOGIC ---
 
   const startSequenceForSet = (targetIndex) => {
@@ -279,39 +297,87 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
     if (!gameSetsRef.current[forcedIndex]) return;
 
-    // Speak First Number Immediately
-    const firstNum = gameSetsRef.current[forcedIndex][0];
-    playSound("tick");
-    speakNumber(firstNum);
+    let currentIdx = 0;
 
-    intervalRef.current = setInterval(() => {
-      setCurrentNumberIndex((prev) => {
-        const next = prev + 1;
+    const flashNext = () => {
+      if (!isMounted.current) return;
 
-        if (next >= nps) {
-          // END OF SET
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
+      if (currentIdx >= nps) {
+        // END OF SET - Speak "equals" after flashing numbers
+        speakEquals();
 
-          // Speak "equals" after flashing numbers
-          speakEquals();
+        // Transition to input immediately to show the "?" in the input box
+        setTimeout(() => {
+          if (isMounted.current) setPhase("input");
+        }, 200);
+        return;
+      }
 
-          // Transition to input immediately to show the "?" in the input box
-          setTimeout(() => {
-              setPhase("input");
-          }, 200);
+      const num = gameSetsRef.current[forcedIndex][currentIdx];
 
-          return prev;
+      // Update display
+      setCurrentNumberIndex(currentIdx);
+
+      // Play tick sound
+      playSound("tick");
+
+      // Speak number with callback to continue sequence
+      if (ttsEnabled && !settings.mute) {
+        window.speechSynthesis.cancel();
+
+        // Build speech text
+        let spokenText;
+        if (lang === 'th') {
+          if (num >= 0) spokenText = `บวก ${Math.abs(num)}`;
+          else spokenText = `ลบ ${Math.abs(num)}`;
+        } else {
+          if (num >= 0) spokenText = `Plus ${Math.abs(num)}`;
+          else spokenText = `Minus ${Math.abs(num)}`;
         }
 
-        const num = gameSetsRef.current[forcedIndex][next];
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        utterance.rate = 1.3;
+        utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
 
-        playSound("tick");
-        speakNumber(num);
+        // Find preferred voice
+        const preferredVoice = voices.find(v =>
+          lang === 'th'
+            ? (v.lang === "th-TH" || v.lang === "th_TH")
+            : (v.name.includes("Google US English") || v.lang === "en-US" || v.lang === "en_US")
+        );
 
-        return next;
-      });
-    }, Math.max(speed, 0.4) * 1000);
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+          utterance.lang = preferredVoice.lang;
+        }
+
+        // Wait for speech to finish before flashing next number
+        utterance.onend = () => {
+          currentUtteranceRef.current = null;
+          currentIdx++;
+          const id = setTimeout(flashNext, 100); // Small delay after speech
+          timeoutsRef.current.push(id);
+        };
+
+        utterance.onerror = () => {
+          currentUtteranceRef.current = null;
+          currentIdx++;
+          const id = setTimeout(flashNext, Math.max(speed, 0.4) * 1000);
+          timeoutsRef.current.push(id);
+        };
+
+        currentUtteranceRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        // No TTS - use speed setting for delay
+        currentIdx++;
+        const id = setTimeout(flashNext, Math.max(speed, 0.4) * 1000);
+        timeoutsRef.current.push(id);
+      }
+    };
+
+    // Start flashing sequence
+    flashNext();
   };
 
   // Request fullscreen
@@ -327,18 +393,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   };
 
   const handleStart = () => {
+    // Unlock audio on user interaction
+    unlockAudio();
+
     // Request fullscreen
     requestFullscreen();
-
-    // TTS UNLOCK: Must speak a REAL word to wake up Android engine
-    // Volume set to near-zero to be inaudible
-    if (ttsEnabled) {
-        window.speechSynthesis.cancel();
-        const unlock = new SpeechSynthesisUtterance(" ");
-        unlock.rate = 2;
-        unlock.volume = 0.01;
-        window.speechSynthesis.speak(unlock);
-    }
 
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
     const generated = generateRandomSets(totalRounds + 5, nps);

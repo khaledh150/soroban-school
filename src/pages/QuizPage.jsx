@@ -209,6 +209,25 @@ export default function QuizPage() {
     }
   }, [settings.mute]);
 
+  // --- UNLOCK AUDIO ---
+  const unlockAudio = useCallback(() => {
+    // Unlock HTML5 Audio elements
+    Object.values(audioRefs.current).forEach(audio => {
+      if (audio) {
+        audio.play().then(() => audio.pause()).catch(() => {});
+      }
+    });
+
+    // Unlock Web Speech API
+    try {
+      const unlock = new SpeechSynthesisUtterance(" ");
+      unlock.volume = 0.01;
+      window.speechSynthesis.speak(unlock);
+    } catch (e) {
+      // Silently fail if speech API not available
+    }
+  }, []);
+
   // --- STOP ALL AUDIO ---
   const stopAllAudio = useCallback(() => {
     if ('speechSynthesis' in window) {
@@ -595,6 +614,10 @@ export default function QuizPage() {
 
   const startQuiz = async () => {
     stopAllAudio();
+
+    // Unlock audio on user interaction
+    unlockAudio();
+
     if (!isIOS() && !document.fullscreenElement) {
        document.documentElement.requestFullscreen().catch(() => {});
     }
