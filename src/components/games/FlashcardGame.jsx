@@ -139,8 +139,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   }, []);
 
   // --- TTS ENGINE (Optimized for sync with flashing numbers) ---
-  const speakNumber = useCallback((num) => {
-    if (!ttsEnabled || !isMounted.current) return;
+  const speakNumber = useCallback((num, onComplete) => {
+    if (!ttsEnabled || !isMounted.current) {
+      // If TTS is disabled, call the callback immediately
+      onComplete && onComplete();
+      return;
+    }
 
     window.speechSynthesis.cancel();
 
@@ -172,10 +176,16 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
     // Bind ref to prevent Garbage Collection
     currentUtteranceRef.current = utterance;
-    utterance.onend = () => { currentUtteranceRef.current = null; };
-    utterance.onerror = () => {};
+    utterance.onend = () => {
+      currentUtteranceRef.current = null;
+      onComplete && onComplete();
+    };
+    utterance.onerror = () => {
+      currentUtteranceRef.current = null;
+      onComplete && onComplete();
+    };
 
-    // Speak immediately - no delay for better sync
+    // Speak immediately
     window.speechSynthesis.speak(utterance);
   }, [ttsEnabled, lang, voices]);
 
@@ -326,61 +336,15 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       // Play tick sound
       playSound("tick");
 
-      // Speak number with callback to continue sequence
-      if (ttsEnabled) {
-        window.speechSynthesis.cancel();
-
-        // Build speech text
-        let spokenText;
-        if (lang === 'th') {
-          if (num >= 0) spokenText = `บวก ${Math.abs(num)}`;
-          else spokenText = `ลบ ${Math.abs(num)}`;
-        } else {
-          if (num >= 0) spokenText = `Plus ${Math.abs(num)}`;
-          else spokenText = `Minus ${Math.abs(num)}`;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(spokenText);
-        utterance.rate = 1.3;
-        utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
-
-        // Find preferred voice
-        const preferredVoice = voices.find(v =>
-          lang === 'th'
-            ? (v.lang === "th-TH" || v.lang === "th_TH")
-            : (v.name.includes("Google US English") || v.lang === "en-US" || v.lang === "en_US")
-        );
-
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-          utterance.lang = preferredVoice.lang;
-        }
-
-        // Wait for speech to finish before flashing next number
-        utterance.onend = () => {
-          if (!isMounted.current) return;
-          currentUtteranceRef.current = null;
-          currentIdx++;
-          const id = setTimeout(flashNext, 100); // Small delay after speech
-          timeoutsRef.current.push(id);
-        };
-
-        utterance.onerror = () => {
-          if (!isMounted.current) return;
-          currentUtteranceRef.current = null;
-          currentIdx++;
-          const id = setTimeout(flashNext, Math.max(speed, 0.4) * 1000);
-          timeoutsRef.current.push(id);
-        };
-
-        currentUtteranceRef.current = utterance;
-        window.speechSynthesis.speak(utterance);
-      } else {
-        // No TTS - use speed setting for delay
+      // Speak number and wait for speech to finish before continuing
+      speakNumber(num, () => {
+        if (!isMounted.current) return;
         currentIdx++;
-        const id = setTimeout(flashNext, Math.max(speed, 0.4) * 1000);
+        // Small delay after speech, or use speed setting if TTS is disabled
+        const delay = ttsEnabled ? 100 : Math.max(speed, 0.4) * 1000;
+        const id = setTimeout(flashNext, delay);
         timeoutsRef.current.push(id);
-      }
+      });
     };
 
     // Start flashing sequence
