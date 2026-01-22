@@ -363,6 +363,14 @@ export default function QuizPage() {
         return;
       }
 
+      // In focus mode, let the input field handle typing - only handle Enter and X
+      if (isFocusMode && isPC) {
+        if (e.key === 'Enter') { e.preventDefault(); handleSubmitAnswer(); }
+        else if (e.key.toLowerCase() === 'x') resetBoard();
+        return;
+      }
+
+      // Normal mode keyboard handling (for on-screen keypad)
       if (e.key === 'Enter') { e.preventDefault(); handleSubmitAnswer(); }
       else if (e.key === 'Backspace') handleAppendDigit('BACK');
       else if (e.key === '.') handleAppendDigit('.');
@@ -769,16 +777,17 @@ export default function QuizPage() {
             max-width: 100vw !important;
             height: 100vh !important;
             box-shadow: none !important;
+            padding: 1.5rem 2rem !important;
           }
           .soroban-container.hidden-focus { display: none !important; }
           .flash-area.focus-mode {
             flex: 1;
             height: auto;
-            min-height: 60vh;
+            min-height: 65vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 3rem;
           }
           .numpad-grid.hidden-focus { display: none !important; }
           .focus-mode-input-wrapper {
@@ -790,7 +799,48 @@ export default function QuizPage() {
             max-width: 600px;
             z-index: 30;
           }
+          .focus-mode-input-wrapper .answer-box::placeholder {
+            color: #cbd5e1;
+            font-weight: 600;
+            font-size: 1.2rem;
+          }
           .bottom-controls.hidden-focus { display: none !important; }
+
+          /* Focus Mode - Substantially Larger Text Sizes */
+          .focus-mode .flash-token {
+            font-size: clamp(12rem, 25vw, 20rem) !important;
+          }
+          .focus-mode .flash-op {
+            font-size: 0.5em !important;
+          }
+          .focus-mode .flash-qmark {
+            font-size: clamp(14rem, 30vw, 24rem) !important;
+          }
+          .focus-mode .flash-multiplication,
+          .focus-mode .static-multiplication {
+            font-size: clamp(8rem, 18vw, 14rem) !important;
+            letter-spacing: -0.02em !important;
+          }
+          .focus-mode .flash-blank,
+          .focus-mode .static-blank {
+            font-size: clamp(6rem, 14vw, 11rem) !important;
+          }
+          .focus-mode .flash-decimal {
+            font-size: clamp(10rem, 20vw, 16rem) !important;
+          }
+          .focus-mode .feedback-icon {
+            font-size: clamp(14rem, 30vw, 24rem) !important;
+          }
+          .focus-mode .correct-answer-text {
+            font-size: clamp(4rem, 10vw, 8rem) !important;
+            margin-top: 1rem !important;
+          }
+          .focus-mode .static-question {
+            font-size: clamp(6rem, 14vw, 12rem) !important;
+          }
+          .focus-mode .ready-go-text {
+            font-size: clamp(12rem, 25vw, 20rem) !important;
+          }
 
           .focus-btn {
             background: linear-gradient(135deg, #22d3ee 0%, #2563eb 100%);
@@ -1058,6 +1108,54 @@ export default function QuizPage() {
         }
         .mark { font-size: 1rem; }
 
+        /* PC Focus Mode - Larger Results Panel */
+        @media (pointer: fine) {
+          .results-card.focus-results {
+            max-width: 90vw !important;
+            width: 90vw !important;
+            padding: 2rem 3rem !important;
+          }
+          .results-card.focus-results h2 {
+            font-size: 3rem !important;
+            margin-bottom: 2rem !important;
+          }
+          .results-card.focus-results .results-grid {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+            gap: 16px !important;
+            max-height: 60vh !important;
+            padding: 1rem !important;
+          }
+          .results-card.focus-results .result-card {
+            padding: 16px !important;
+            border-radius: 16px !important;
+          }
+          .results-card.focus-results .result-qnum {
+            font-size: 1rem !important;
+            padding: 4px 12px !important;
+          }
+          .results-card.focus-results .result-question {
+            font-size: 1.3rem !important;
+            margin-bottom: 10px !important;
+          }
+          .results-card.focus-results .your-ans {
+            font-size: 1.5rem !important;
+          }
+          .results-card.focus-results .correct-ans {
+            font-size: 1.3rem !important;
+          }
+          .results-card.focus-results .mark {
+            font-size: 1.5rem !important;
+          }
+          .results-card.focus-results > div:nth-child(3) {
+            font-size: 2rem !important;
+            margin: 1.5rem 0 !important;
+          }
+          .results-card.focus-results .results-footer button {
+            font-size: 1.5rem !important;
+            padding: 1rem 2.5rem !important;
+          }
+        }
+
         @media (max-width: 400px) {
             .results-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .result-card { padding: 8px; }
@@ -1118,19 +1216,18 @@ export default function QuizPage() {
               </div>
               <div style={{display:'flex', gap:'8px'}}>
                   <button className="icon-btn" onClick={() => setView("settings")}>⚙️</button>
-                  <button className="icon-btn" onClick={resetBoard}>↻</button>
-                  {isPC ? (
+                  {!isFocusMode && <button className="icon-btn" onClick={resetBoard}>↻</button>}
+                  {isPC && (
                     <button
                       className={`focus-btn ${isFocusMode ? 'active' : ''}`}
                       onClick={() => setIsFocusMode(!isFocusMode)}
                       aria-label="Toggle Focus Mode"
-                      title="Quiz Focus Mode"
+                      title={isFocusMode ? "Exit Focus Mode (ESC)" : "Enter Focus Mode"}
                     >
                       {isFocusMode ? '⊠' : '◉'}
                     </button>
-                  ) : (
-                    <button className="icon-btn" onClick={toggleFullscreen}>⛶</button>
                   )}
+                  {!isPC && <button className="icon-btn" onClick={toggleFullscreen}>⛶</button>}
               </div>
           </div>
           <div className="status-row">
@@ -1154,6 +1251,7 @@ export default function QuizPage() {
                     inputMode="decimal"
                     value={inputValue}
                     onChange={(e) => {
+                      if (inputLocked) return;
                       const val = e.target.value;
                       // Allow only numbers and decimal point, max 8 chars
                       if (/^[0-9.]*$/.test(val) && val.length <= 8) {
@@ -1169,7 +1267,7 @@ export default function QuizPage() {
                     disabled={inputLocked}
                     className="answer-box"
                     style={{textAlign: 'right', outline: 'none', border: 'none', background: '#fff', cursor: inputLocked ? 'not-allowed' : 'text'}}
-                    placeholder={inputLocked ? '' : '?'}
+                    placeholder={inputLocked ? '' : 'Enter your answer here...'}
                   />
                   <button className="send-btn" onClick={handleSubmitAnswer} disabled={inputLocked || !inputValue}>{t.send}</button>
               </div>
@@ -1236,7 +1334,7 @@ export default function QuizPage() {
       {/* === RESULTS / TIMEUP === */}
       {(view === 'results' || view === 'timeup') && (
         <div id={view === 'timeup' ? "timeUpPanel" : "resultsPanel"} style={{display:'flex'}}>
-            <div className="results-card">
+            <div className={`results-card ${isPC ? 'focus-results' : ''}`}>
                 <div className={`abacus-mascot ${isMascotBouncing ? 'mascot-bounce-in' : ''}`}>
                     <div className="abacus-body"><div className="abacus-rod"></div><div className="abacus-beads"><div className="abacus-bead"></div><div className="abacus-bead"></div><div className="abacus-bead"></div><div className="abacus-bead"></div></div><div className="abacus-rod"></div></div>
                     <div className="mascot-face"><div className="eyes"><div className="eye"></div></div><div className="smile"></div><div className="cheek"></div><div className="cheek right"></div></div>
