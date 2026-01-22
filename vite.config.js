@@ -18,8 +18,8 @@ export default defineConfig({
         theme_color: '#111827', // Matched to your dark theme background
         background_color: '#111827',
         display: 'standalone',
-        scope: '/soroban-school/',
-        start_url: '/soroban-school/',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -41,5 +41,5 @@ export default defineConfig({
       }
     })
   ],
-  base: '/soroban-school/',
+  base: '/',
 });
