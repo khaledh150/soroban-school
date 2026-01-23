@@ -90,8 +90,6 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const timeoutsRef = useRef([]);
   const isMounted = useRef(true);
 
-  // GC FIX: Hold reference to current utterance
-  const currentUtteranceRef = useRef(null);
 
   useEffect(() => {
     // Load all audio assets on mount to prevent PC playback delays
@@ -142,8 +140,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     };
   }, []);
 
-  // --- TTS ENGINE (Same as QuizPage) ---
-  const speakText = useCallback((text, type = 'number') => {
+  // --- SPEECH (DICTATION) - Exact copy from QuizPage ---
+  const speakText = (text, type = 'number') => {
     if (!ttsEnabled || !isMounted.current) return;
 
     window.speechSynthesis.cancel();
@@ -163,25 +161,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     }
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = 1.1; // Same fixed rate as QuizPage
+    utterance.rate = 1.1;
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
 
-    // Bind ref to prevent Garbage Collection
-    currentUtteranceRef.current = utterance;
-    utterance.onend = () => {
-      currentUtteranceRef.current = null;
-    };
-    utterance.onerror = () => {
-      currentUtteranceRef.current = null;
-    };
-
     window.speechSynthesis.speak(utterance);
-  }, [ttsEnabled, lang]);
-
-  // Speak "equals" at the end of flashing (same as QuizPage)
-  const speakEquals = useCallback(() => {
-    speakText("equals");
-  }, [speakText]);
+  };
 
 
   const playSound = useCallback((name) => {
@@ -263,12 +247,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     runSeq();
   };
 
+  // Exact copy of QuizPage flashQuestionTokens logic
   const startFlashing = (forcedIndex) => {
-    // Clear any existing flash timer
+    // Clear any existing flash timer (same as QuizPage: gameState.current.flashTokenTimer)
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
 
-    // Capture settings at start to avoid stale closure issues
-    const flashSpeed = speed;
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
 
     setPhase("playing");
@@ -286,35 +269,29 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         // Update display
         setCurrentNumberIndex(idx);
 
-        // Play tick sound
+        // Play tick sound (same as QuizPage)
         playSound("tick");
 
         // Speak number (same format as QuizPage: "+45" or "-123" with type 'op')
         const textForSpeech = num >= 0 ? `+${Math.abs(num)}` : `-${Math.abs(num)}`;
         speakText(textForSpeech, 'op');
 
-        // Calculate delay (same as QuizPage)
-        // Add extra time for longer numbers (3+ digits need more time for dictation)
+        // Add extra time to ensure dictation completes before next number
         const digitCount = Math.abs(num).toString().length;
-        let delayMultiplier = 1;
-        if (digitCount >= 4) delayMultiplier = 2;
-        else if (digitCount >= 3) delayMultiplier = 1.5;
-
-        // Each number gets flashSpeed seconds × multiplier
-        const delay = flashSpeed * 1000 * delayMultiplier;
+        let delayMultiplier = 1.5; // Base: 1.5x for 1-2 digit numbers
+        if (digitCount >= 4) delayMultiplier = 2.5;
+        else if (digitCount >= 3) delayMultiplier = 2;
+        const delay = speed * 1000 * delayMultiplier;
 
         if (idx === nps - 1) {
-          // Last number - after delay, show "?" and go to input
+          // Last number - after delay, speak equals and go to input (same as QuizPage)
           flashTimerRef.current = setTimeout(() => {
             if (!isMounted.current) return;
-            speakEquals();
-            const id = setTimeout(() => {
-              if (isMounted.current) setPhase("input");
-            }, 200);
-            timeoutsRef.current.push(id);
+            speakText("equals");
+            setPhase("input");
           }, delay);
         } else {
-          // Not last - after delay, show next number
+          // Not last - after delay, show next number (same as QuizPage)
           flashTimerRef.current = setTimeout(() => {
             idx++;
             showNext();
