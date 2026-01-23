@@ -448,8 +448,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
 
-    // Play sound FIRST (exactly like QuizPage)
-    playSound("ready");
+    // Play sound after a tiny delay to avoid race condition with unlockAudio's pause callback
+    const soundId = setTimeout(() => playSound("ready"), 50);
+    timeoutsRef.current.push(soundId);
 
     const runSeq = () => {
         if (!isMounted.current) return;
