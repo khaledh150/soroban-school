@@ -221,7 +221,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   });
 
   const timeoutsRef = useRef([]);
-
+  const isMounted = useRef(true);
 
   useEffect(() => {
     const update = () => {
@@ -309,7 +309,13 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
     timeoutsRef.current.forEach((t) => clearTimeout(t));
     timeoutsRef.current = [];
   };
-  useEffect(() => clearTimers, []);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      clearTimers();
+    };
+  }, []);
 
   const playSound = (key) => {
     try {

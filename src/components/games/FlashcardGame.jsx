@@ -217,7 +217,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   }, [ttsEnabled, lang, voices]);
 
 
-  const playSound = (name) => {
+  const playSound = useCallback((name) => {
     try {
       const audio = audioRefs.current[name];
       if (audio) {
@@ -225,7 +225,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         audio.play().catch(() => {});
       }
     } catch (e) { console.error(e); }
-  };
+  }, []);
 
   const unlockAudio = () => {
     // Unlock HTML5 Audio elements
