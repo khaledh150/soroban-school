@@ -142,60 +142,29 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     };
   }, []);
 
-  // --- TTS ENGINE (Optimized for sync with flashing numbers) ---
-  // Speed parameter allows dynamic rate adjustment based on flash speed setting
-  const speakNumber = useCallback((num, flashSpeed = 1) => {
-    if (!ttsEnabled || !isMounted.current) {
-      return;
-    }
+  // --- TTS ENGINE (Same as QuizPage) ---
+  const speakText = useCallback((text, type = 'number') => {
+    if (!ttsEnabled || !isMounted.current) return;
 
     window.speechSynthesis.cancel();
 
-    // Build speech text - just the number with plus/minus
-    let spokenText;
-    if (lang === 'th') {
-      if (num >= 0) spokenText = `บวก ${Math.abs(num)}`;
-      else spokenText = `ลบ ${Math.abs(num)}`;
+    let spokenText = text;
+
+    if (text === 'equals') {
+      spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
+    } else if (lang === 'th') {
+      if (type === 'op') {
+        spokenText = text.replace('+', 'บวก ').replace('-', 'ลบ ');
+      }
     } else {
-      if (num >= 0) spokenText = `Plus ${Math.abs(num)}`;
-      else spokenText = `Minus ${Math.abs(num)}`;
+      if (type === 'op') {
+        spokenText = text.replace('+', 'Plus ').replace('-', 'Minus ');
+      }
     }
-
-    // Calculate TTS rate based on flash speed and number length
-    // Longer numbers need faster speech to fit within the time window
-    const digitCount = Math.abs(num).toString().length;
-
-    // Base rate: slower speed setting = slower speech, faster setting = faster speech
-    // At 1 second speed, use rate 1.0 (normal)
-    // At 0.5 second speed, use rate 1.5 (faster)
-    // At 2 second speed, use rate 0.8 (slower)
-    let baseRate = 1.0 / flashSpeed;
-
-    // Adjust for number length - longer numbers need faster speech
-    // 1-2 digits: no adjustment
-    // 3 digits: +0.2 rate
-    // 4+ digits: +0.4 rate
-    if (digitCount >= 4) baseRate += 0.3;
-    else if (digitCount >= 3) baseRate += 0.15;
-
-    // Clamp rate between 0.7 (slow enough to understand) and 2.0 (max speed)
-    const rate = Math.max(0.7, Math.min(2.0, baseRate));
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = rate;
+    utterance.rate = 1.1; // Same fixed rate as QuizPage
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
-
-    // Find preferred voice
-    const preferredVoice = voices.find(v =>
-      lang === 'th'
-        ? (v.lang === "th-TH" || v.lang === "th_TH")
-        : (v.name.includes("Google US English") || v.lang === "en-US" || v.lang === "en_US")
-    );
-
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-      utterance.lang = preferredVoice.lang;
-    }
 
     // Bind ref to prevent Garbage Collection
     currentUtteranceRef.current = utterance;
@@ -206,36 +175,13 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       currentUtteranceRef.current = null;
     };
 
-    // Speak immediately
     window.speechSynthesis.speak(utterance);
-  }, [ttsEnabled, lang, voices]);
+  }, [ttsEnabled, lang]);
 
-  // Speak "equals" at the end of flashing
+  // Speak "equals" at the end of flashing (same as QuizPage)
   const speakEquals = useCallback(() => {
-    if (!ttsEnabled || !isMounted.current) return;
-
-    window.speechSynthesis.cancel();
-
-    const spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
-    const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = 1.2;
-    utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
-
-    const preferredVoice = voices.find(v =>
-      lang === 'th'
-        ? (v.lang === "th-TH" || v.lang === "th_TH")
-        : (v.name.includes("Google US English") || v.lang === "en-US" || v.lang === "en_US")
-    );
-
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-      utterance.lang = preferredVoice.lang;
-    }
-
-    currentUtteranceRef.current = utterance;
-    utterance.onend = () => { currentUtteranceRef.current = null; };
-    window.speechSynthesis.speak(utterance);
-  }, [ttsEnabled, lang, voices]);
+    speakText("equals");
+  }, [speakText]);
 
 
   const playSound = useCallback((name) => {
@@ -343,16 +289,19 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         // Play tick sound
         playSound("tick");
 
-        // Speak number (fire and forget - don't wait for completion)
-        speakNumber(num);
+        // Speak number (same format as QuizPage: "+45" or "-123" with type 'op')
+        const textForSpeech = num >= 0 ? `+${Math.abs(num)}` : `-${Math.abs(num)}`;
+        speakText(textForSpeech, 'op');
 
-        // Calculate delay based on number length (same as QuizPage)
+        // Calculate delay (same as QuizPage)
+        // Add extra time for longer numbers (3+ digits need more time for dictation)
         const digitCount = Math.abs(num).toString().length;
         let delayMultiplier = 1;
         if (digitCount >= 4) delayMultiplier = 2;
         else if (digitCount >= 3) delayMultiplier = 1.5;
-        // Use captured flashSpeed to avoid closure issues, with minimum 300ms
-        const delay = Math.max(300, flashSpeed * 1000 * delayMultiplier);
+
+        // Each number gets flashSpeed seconds × multiplier
+        const delay = flashSpeed * 1000 * delayMultiplier;
 
         if (idx === nps - 1) {
           // Last number - after delay, show "?" and go to input
