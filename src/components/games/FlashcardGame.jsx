@@ -103,8 +103,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     if (audioRefs.current.ding) audioRefs.current.ding.volume = 1.0;
   }, []);
 
+  // Ref to store current flash timer (same pattern as QuizPage)
+  const flashTimerRef = useRef(null);
+
   const clearTimers = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     timeoutsRef.current.forEach((id) => clearTimeout(id));
     timeoutsRef.current = [];
   };
@@ -139,10 +143,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   }, []);
 
   // --- TTS ENGINE (Optimized for sync with flashing numbers) ---
-  const speakNumber = useCallback((num, onComplete) => {
+  // Speed parameter allows dynamic rate adjustment based on flash speed setting
+  const speakNumber = useCallback((num, flashSpeed = 1) => {
     if (!ttsEnabled || !isMounted.current) {
-      // If TTS is disabled, call the callback immediately
-      onComplete && onComplete();
       return;
     }
 
@@ -158,8 +161,28 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       else spokenText = `Minus ${Math.abs(num)}`;
     }
 
+    // Calculate TTS rate based on flash speed and number length
+    // Longer numbers need faster speech to fit within the time window
+    const digitCount = Math.abs(num).toString().length;
+
+    // Base rate: slower speed setting = slower speech, faster setting = faster speech
+    // At 1 second speed, use rate 1.0 (normal)
+    // At 0.5 second speed, use rate 1.5 (faster)
+    // At 2 second speed, use rate 0.8 (slower)
+    let baseRate = 1.0 / flashSpeed;
+
+    // Adjust for number length - longer numbers need faster speech
+    // 1-2 digits: no adjustment
+    // 3 digits: +0.2 rate
+    // 4+ digits: +0.4 rate
+    if (digitCount >= 4) baseRate += 0.3;
+    else if (digitCount >= 3) baseRate += 0.15;
+
+    // Clamp rate between 0.7 (slow enough to understand) and 2.0 (max speed)
+    const rate = Math.max(0.7, Math.min(2.0, baseRate));
+
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = 1.3; // Faster rate to keep up with flashing
+    utterance.rate = rate;
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
 
     // Find preferred voice
@@ -178,11 +201,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     currentUtteranceRef.current = utterance;
     utterance.onend = () => {
       currentUtteranceRef.current = null;
-      onComplete && onComplete();
     };
     utterance.onerror = () => {
       currentUtteranceRef.current = null;
-      onComplete && onComplete();
     };
 
     // Speak immediately
@@ -228,14 +249,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   }, []);
 
   const unlockAudio = () => {
-    // Unlock HTML5 Audio elements
-    Object.values(audioRefs.current).forEach(audio => {
-      if (audio) {
-        audio.play().then(() => audio.pause()).catch(() => {});
-      }
-    });
-
-    // Unlock Web Speech API
+    // Unlock Web Speech API only - audio will be unlocked by direct play
     try {
       const unlock = new SpeechSynthesisUtterance(" ");
       unlock.volume = 0.01;
@@ -265,13 +279,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
        setActualAnswer(ans);
     }
 
-    // EXACT clone from QuizPage showReadySetGo
+    // Ready sequence with sound
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
-
-    // Play sound after a tiny delay to avoid race condition with unlockAudio's pause callback
-    const soundId = setTimeout(() => playSound("ready"), 50);
-    timeoutsRef.current.push(soundId);
 
     const runSeq = () => {
         if (!isMounted.current) return;
@@ -292,7 +302,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         } else {
             const id = setTimeout(() => {
                 setReadyText("");
-                // Wait 1000ms before starting flash (exactly like QuizPage)
+                // Wait before starting flash
                 const pauseId = setTimeout(() => {
                     startFlashing(targetIndex);
                 }, 1000);
@@ -301,58 +311,70 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             timeoutsRef.current.push(id);
         }
     };
+
+    // Play sound and start sequence (first call has sound from handleStart, subsequent calls play here)
+    playSound("ready");
     runSeq();
   };
 
   const startFlashing = (forcedIndex) => {
-    setPhase("playing");
+    // Clear any existing flash timer
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+
+    // Capture settings at start to avoid stale closure issues
+    const flashSpeed = speed;
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
+
+    setPhase("playing");
 
     if (!gameSetsRef.current[forcedIndex]) return;
 
-    let currentIdx = 0;
+    let idx = 0;
 
-    const flashNext = () => {
+    function showNext() {
       if (!isMounted.current) return;
 
-      if (currentIdx >= nps) {
-        // END OF SET - Speak "equals" after flashing numbers
-        speakEquals();
+      if (idx < nps) {
+        const num = gameSetsRef.current[forcedIndex][idx];
 
-        // Transition to input immediately to show the "?" in the input box
-        const id = setTimeout(() => {
-          if (isMounted.current) setPhase("input");
-        }, 200);
-        timeoutsRef.current.push(id);
-        return;
+        // Update display
+        setCurrentNumberIndex(idx);
+
+        // Play tick sound
+        playSound("tick");
+
+        // Speak number (fire and forget - don't wait for completion)
+        speakNumber(num);
+
+        // Calculate delay based on number length (same as QuizPage)
+        const digitCount = Math.abs(num).toString().length;
+        let delayMultiplier = 1;
+        if (digitCount >= 4) delayMultiplier = 2;
+        else if (digitCount >= 3) delayMultiplier = 1.5;
+        // Use captured flashSpeed to avoid closure issues, with minimum 300ms
+        const delay = Math.max(300, flashSpeed * 1000 * delayMultiplier);
+
+        if (idx === nps - 1) {
+          // Last number - after delay, show "?" and go to input
+          flashTimerRef.current = setTimeout(() => {
+            if (!isMounted.current) return;
+            speakEquals();
+            const id = setTimeout(() => {
+              if (isMounted.current) setPhase("input");
+            }, 200);
+            timeoutsRef.current.push(id);
+          }, delay);
+        } else {
+          // Not last - after delay, show next number
+          flashTimerRef.current = setTimeout(() => {
+            idx++;
+            showNext();
+          }, delay);
+        }
       }
+    }
 
-      const num = gameSetsRef.current[forcedIndex][currentIdx];
-      const flashStartTime = performance.now();
-      const targetDelay = Math.max(speed, 0.4) * 1000;
-
-      // Update display
-      setCurrentNumberIndex(currentIdx);
-
-      // Play tick sound
-      playSound("tick");
-
-      // Speak number and wait for speech to finish before continuing
-      speakNumber(num, () => {
-        if (!isMounted.current) return;
-
-        // Calculate remaining time based on speed setting
-        const elapsed = performance.now() - flashStartTime;
-        const remainingDelay = Math.max(0, targetDelay - elapsed);
-
-        currentIdx++;
-        const id = setTimeout(flashNext, remainingDelay);
-        timeoutsRef.current.push(id);
-      });
-    };
-
-    // Start flashing sequence
-    flashNext();
+    showNext();
   };
 
   // Request fullscreen
@@ -368,7 +390,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   };
 
   const handleStart = () => {
-    // Unlock audio on user interaction
+    // Unlock speech on user interaction
     unlockAudio();
 
     // Request fullscreen
@@ -485,10 +507,10 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
        setActualAnswer(ans);
     }
 
-    // Small delay then start flashing directly
+    // Short delay then start flashing directly
     const id = setTimeout(() => {
       startFlashing(targetIndex);
-    }, 500);
+    }, 300);
     timeoutsRef.current.push(id);
   };
 

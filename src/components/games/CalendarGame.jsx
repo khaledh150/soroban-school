@@ -261,14 +261,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   };
 
   const unlockAudio = () => {
-    // Unlock HTML5 Audio elements
-    Object.values(audioRefs.current).forEach(audio => {
-      if (audio) {
-        audio.play().then(() => audio.pause()).catch(() => {});
-      }
-    });
-
-    // Unlock Web Speech API
+    // Unlock Web Speech API only - audio will be unlocked by direct play
     try {
       const unlock = new SpeechSynthesisUtterance(" ");
       unlock.volume = 0.01;
@@ -391,7 +384,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
 
   const startRound = () => {
-    // Unlock audio on user interaction
+    // Unlock speech on user interaction
     unlockAudio();
 
     // Always request fullscreen on any device when clicking spin
@@ -444,13 +437,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
     setPhase("getready");
 
-    // EXACT clone from QuizPage showReadySetGo
+    // Ready sequence with sound
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
-
-    // Play sound after a tiny delay to avoid race condition with unlockAudio's pause callback
-    const soundId = setTimeout(() => playSound("ready"), 50);
-    timeoutsRef.current.push(soundId);
 
     const runSeq = () => {
         if (!isMounted.current) return;
@@ -481,6 +470,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             timeoutsRef.current.push(id);
         }
     };
+
+    // Play sound and start sequence
+    playSound("ready");
     runSeq();
   };
 
@@ -770,7 +762,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
       {/* --- PHASE: ANSWER REVEAL --- */}
       {phase === "answer" && date && (
-        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-lg p-4 sm:p-6 animate-in fade-in duration-500 pt-20 sm:pt-24 overflow-y-auto">
+        <div className="answer-overlay absolute inset-0 z-40 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-lg p-4 sm:p-6 animate-in fade-in duration-500 pt-20 sm:pt-24 overflow-y-auto">
 
            <div className="
              answer-panel
@@ -779,10 +771,10 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
              overflow-hidden flex flex-col items-center p-5 sm:p-10 gap-3 sm:gap-5 max-h-[calc(100vh-140px)] sm:max-h-[calc(100vh-190px)]
              animate-in zoom-in-95 duration-500 mb-4 sm:mb-8
            ">
-              <div className="absolute top-0 left-0 w-full h-1 sm:h-2 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500" />
+              <div className="gradient-bar absolute top-0 left-0 w-full h-1 sm:h-2 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500" />
 
-              <div className="flex flex-col items-center">
-                <span className="text-slate-400 font-bold uppercase tracking-widest text-xs sm:text-sm mb-1 sm:mb-2">{t.winningDate}</span>
+              <div className="weekday-info flex flex-col items-center">
+                <span className="winning-label text-slate-400 font-bold uppercase tracking-widest text-xs sm:text-sm mb-1 sm:mb-2">{t.winningDate}</span>
                 <h2 className="weekday-title text-2xl sm:text-5xl font-black text-slate-800 uppercase tracking-tight">
                   {weekdayName}
                 </h2>
@@ -890,7 +882,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         /* Phone landscape mode - slot machine must fit viewport */
         @media (max-height: 500px) and (orientation: landscape) {
           .slot-container {
-            padding-top: 3.5rem !important;
+            padding-top: 2.5rem !important;
             gap: 0 !important;
             justify-content: flex-start !important;
           }
@@ -920,63 +912,101 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
             font-size: 0.8rem !important;
             border-radius: 9999px !important;
           }
-          /* Results panel for phone landscape - compact to fit */
-          .answer-panel {
-            max-height: 90vh !important;
-            height: auto !important;
-            padding: 0.5rem 0.75rem !important;
-            gap: 0.25rem !important;
-            margin-top: 0 !important;
-            padding-top: 3.5rem !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-          }
-          .answer-panel .calendar-grid {
-            padding: 0.25rem !important;
-            background: white !important;
-            border-radius: 1rem !important;
-          }
-          .answer-panel .calendar-grid td {
-            padding: 0.1rem !important;
-          }
-          .answer-panel .calendar-grid .day-cell {
-            width: 1.6rem !important;
-            height: 1.6rem !important;
-            font-size: 0.7rem !important;
-            border-radius: 0.375rem !important;
-          }
-          .answer-panel .calendar-grid .day-cell.target {
-            transform: scale(1.1) !important;
-          }
-          .answer-panel .weekday-title {
-            font-size: 1.5rem !important;
-            color: white !important;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
-          }
-          .answer-panel .date-display {
-            font-size: 1rem !important;
-            padding: 0.25rem 0.75rem !important;
-            background: white !important;
-            border-radius: 0.5rem !important;
-          }
-          /* Floating play again button */
-          .play-again-float {
-            position: fixed !important;
-            bottom: 0.75rem !important;
-            right: 0.75rem !important;
-            z-index: 100 !important;
-            margin: 0 !important;
-            padding: 0.6rem 1.25rem !important;
-            font-size: 0.8rem !important;
-            border-radius: 9999px !important;
-          }
           /* Bigger ready countdown for phone landscape */
           .ready-number {
             font-size: 8rem !important;
           }
           .ready-word {
             font-size: 6rem !important;
+          }
+        }
+
+        /* Phone landscape RESULTS - calendar must show fully */
+        @media (max-height: 500px) and (orientation: landscape) {
+          /* Results container - start from top, buttons float over it */
+          .answer-overlay {
+            padding: 0.5rem !important;
+            padding-top: 0.5rem !important;
+            justify-content: flex-start !important;
+          }
+
+          /* Results panel - compact horizontal layout */
+          .answer-panel {
+            max-height: 100vh !important;
+            height: auto !important;
+            padding: 0.4rem 0.5rem !important;
+            gap: 0.2rem !important;
+            margin: 0 !important;
+            background: white !important;
+            border-radius: 1rem !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+
+          /* Weekday info - left side */
+          .answer-panel .weekday-info {
+            flex: 0 0 auto !important;
+            padding: 0.25rem 0.5rem !important;
+            padding-left: 3.5rem !important; /* Space for back button */
+          }
+          .answer-panel .winning-label {
+            display: none !important;
+          }
+          .answer-panel .weekday-title {
+            font-size: 1.1rem !important;
+            color: #1e293b !important;
+            text-shadow: none !important;
+          }
+          .answer-panel .date-display {
+            font-size: 0.75rem !important;
+            padding: 0.15rem 0.5rem !important;
+            margin-top: 0.15rem !important;
+          }
+
+          /* Calendar grid - right side, takes remaining space */
+          .answer-panel .calendar-grid {
+            flex: 1 !important;
+            padding: 0.2rem !important;
+            background: #f8fafc !important;
+            border-radius: 0.5rem !important;
+            max-width: none !important;
+            margin-right: 3rem !important; /* Space for fullscreen button */
+          }
+          .answer-panel .calendar-grid th {
+            font-size: 0.5rem !important;
+            padding-bottom: 0.1rem !important;
+          }
+          .answer-panel .calendar-grid td {
+            padding: 0.05rem !important;
+          }
+          .answer-panel .calendar-grid .day-cell {
+            width: 1.4rem !important;
+            height: 1.4rem !important;
+            font-size: 0.6rem !important;
+            border-radius: 0.25rem !important;
+          }
+          .answer-panel .calendar-grid .day-cell.target {
+            transform: scale(1.15) !important;
+            animation: none !important;
+          }
+
+          /* Gradient bar at top */
+          .answer-panel .gradient-bar {
+            display: none !important;
+          }
+
+          /* Play again button - floating bottom right */
+          .play-again-float {
+            position: fixed !important;
+            bottom: 0.5rem !important;
+            right: 0.5rem !important;
+            z-index: 100 !important;
+            margin: 0 !important;
+            padding: 0.4rem 1rem !important;
+            font-size: 0.7rem !important;
+            border-radius: 9999px !important;
           }
         }
 
