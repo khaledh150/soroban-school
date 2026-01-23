@@ -438,11 +438,11 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
     setPhase("getready");
 
-    // Visual Sequence Logic - EXACT same as QuizPage showReadySetGo
+    // EXACT clone from QuizPage showReadySetGo
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
 
-    // Play audio at start (same as QuizPage - play BEFORE setting initial text)
+    // Play sound FIRST (exactly like QuizPage)
     playSound("ready");
 
     const runSeq = () => {
@@ -453,29 +453,27 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         setReadyText(text);
         setIsReadyWord(isWord);
 
-        const delay = 800; // Same timing as QuizPage
+        const delays = [800, 800, 800, 800, 800];
 
         if (i < seq.length - 1) {
             const id = setTimeout(() => {
                 i++;
                 runSeq();
-            }, delay);
+            }, delays[i]);
             timeoutsRef.current.push(id);
         } else {
-            // After "1", clear and pause before starting
             const id = setTimeout(() => {
                 setReadyText("");
-                playSound("buzz");
-                // 1 second pause before spin starts (same as QuizPage)
+                // Wait 1000ms before triggering spin (exactly like QuizPage)
                 const pauseId = setTimeout(() => {
+                    playSound("buzz");
                     triggerSpinSequence();
                 }, 1000);
                 timeoutsRef.current.push(pauseId);
-            }, delay);
+            }, delays[i]);
             timeoutsRef.current.push(id);
         }
     };
-
     runSeq();
   };
 

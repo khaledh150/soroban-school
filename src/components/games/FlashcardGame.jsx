@@ -265,11 +265,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
        setActualAnswer(ans);
     }
 
-    // Visual Sequence Logic - EXACT same as QuizPage showReadySetGo
+    // EXACT clone from QuizPage showReadySetGo
     const seq = ["Get", "Ready", "3", "2", "1"];
     let i = 0;
 
-    // Play audio at start (same as QuizPage - play BEFORE sequence starts)
+    // Play sound FIRST (exactly like QuizPage)
     playSound("ready");
 
     const runSeq = () => {
@@ -280,28 +280,26 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         setReadyText(text);
         setIsReadyWord(isWord);
 
-        const delay = 800; // Same timing as QuizPage
+        const delays = [800, 800, 800, 800, 800];
 
         if (i < seq.length - 1) {
             const id = setTimeout(() => {
                 i++;
                 runSeq();
-            }, delay);
+            }, delays[i]);
             timeoutsRef.current.push(id);
         } else {
-            // After "1", clear and pause before starting
             const id = setTimeout(() => {
                 setReadyText("");
-                // 1 second pause before flashing starts (same as QuizPage)
+                // Wait 1000ms before starting flash (exactly like QuizPage)
                 const pauseId = setTimeout(() => {
                     startFlashing(targetIndex);
                 }, 1000);
                 timeoutsRef.current.push(pauseId);
-            }, delay);
+            }, delays[i]);
             timeoutsRef.current.push(id);
         }
     };
-
     runSeq();
   };
 

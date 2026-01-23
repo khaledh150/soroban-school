@@ -384,11 +384,20 @@ export default function QuizPage() {
   // --- GLOBAL CLEANUP ---
   useEffect(() => {
     isMounted.current = true;
+
+    // Load all audio assets on mount to prevent playback delays
+    const loadTimer = setTimeout(() => {
+      Object.values(audioRefs.current).forEach(audio => {
+        if (audio) audio.load();
+      });
+    }, 100);
+
     return () => {
-      isMounted.current = false; 
+      isMounted.current = false;
+      clearTimeout(loadTimer);
       if (gameState.current.timerInterval) clearInterval(gameState.current.timerInterval);
       if (gameState.current.flashTokenTimer) clearTimeout(gameState.current.flashTokenTimer);
-      stopAllAudio(); 
+      stopAllAudio();
     };
   }, []);
 
