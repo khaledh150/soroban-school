@@ -19,6 +19,8 @@ import losing from "../assets/sounds/losing-horn.wav";
 import "../components/quiz/soroban.css";
 import "../components/quiz/quiz.css";
 
+import logosBackground from '../assets/images/wonder-nada-soroban.png';
+
 // English Titles (same as HomePage)
 const titleMap = {
   1: [
@@ -1270,6 +1272,14 @@ export default function QuizPage() {
       {/* === QUIZ PANEL === */}
       {view === 'quiz' && (
         <div className={`quiz-panel ${isFocusMode && isPC ? 'focus-mode' : ''}`}>
+          {/* Brand Logos Background - 60% transparent */}
+          <div className="absolute inset-x-0 top-12 -z-10 flex justify-center pointer-events-none overflow-hidden">
+            <img
+              src={logosBackground}
+              alt="Wonder Nada Soroban Logos"
+              className={`h-auto object-contain opacity-40 filter grayscale-[20%] contrast-125 ${isFocusMode && isPC ? 'w-1/4' : 'w-1/2'}`}
+            />
+          </div>
           <div className="top-bar">
               <div className="top-bar-left">
                   <button className="back-pill" onClick={goHome}><span>←</span></button>
