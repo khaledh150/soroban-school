@@ -4,6 +4,38 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import InAppBrowserGuard from './components/InAppBrowserGuard';
 
+// Increment this manually to force a cache reset on next deploy
+const APP_VERSION = "1.0.1";
+
+// Force refresh when a new version is deployed
+function useForceRefreshOnNewVersion() {
+  useEffect(() => {
+    const lastVersion = localStorage.getItem('last_installed_version');
+    if (lastVersion !== APP_VERSION) {
+      // Save the new version first to prevent reload loops
+      localStorage.setItem('last_installed_version', APP_VERSION);
+
+      // Clear all localStorage except the version key we just set
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key !== 'last_installed_version') keys.push(key);
+      }
+      keys.forEach((key) => localStorage.removeItem(key));
+
+      // Unregister all service workers
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => registration.unregister());
+        });
+      }
+
+      // Hard refresh to load the new version
+      window.location.reload(true);
+    }
+  }, []);
+}
+
 // Retry wrapper for lazy imports - handles chunk load errors after deployment
 function lazyWithRetry(importFn) {
   return lazy(() =>
@@ -74,6 +106,8 @@ function Protected({ children }) {
 }
 
 export default function App() {
+  useForceRefreshOnNewVersion();
+
   return (
     <>
     <InAppBrowserGuard />
