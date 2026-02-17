@@ -439,7 +439,6 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
   const startRoundActual = () => {
     clearTimers();
-    requestFullscreen();
     setIsLoading(true);
     const loadStart = Date.now();
     const d = randomDate();
@@ -869,7 +868,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes vibrate {
           0% { transform: translate(0); }
           20% { transform: translate(-2px, 2px); }
