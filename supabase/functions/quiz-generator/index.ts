@@ -1,7 +1,7 @@
 // supabase/functions/quiz-generator/index.ts
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Question, GenFn, book1Generators } from "./book1.ts";
+import { serve } from "std/http/server.ts";
+import { GenFn, book1Generators } from "./book1.ts";
 import { book2Generators } from "./book2.ts";
 import { book3Generators } from "./book3.ts";
 import { book4Generators } from "./book4.ts";

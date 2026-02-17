@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useLanguage, chapterTitlesTH } from "../LanguageContext";
-import logoImg from "../assets/logo.png"; 
+import logoImg from "../assets/logo.webp";
 
 // --- IMPORT LOCAL SLIDESHOW IMAGES ---
 import imgAA from "../assets/images/AA.jpg";
@@ -646,7 +646,7 @@ function HomePage() {
     <div className="min-h-screen w-full bg-[#d8e9fa] font-[Nunito]">
       <div className="fixed top-3 left-4 right-4 z-20 flex items-center justify-between">
         <button onClick={handleLogoClick} className="flex items-center gap-2 bg-white/80 rounded-full px-3 py-1 shadow-md active:scale-95">
-          <img src={logoImg} alt="Wonder Kids" className="w-7 h-7 rounded-full object-contain" />
+          <img src={logoImg} alt="Wonder Kids" className="w-10 h-10 rounded-full object-contain" />
           <span className="text-sm font-bold text-violet-600">{t ? t.appTitle : "Wonder Kids"}</span>
         </button>
 

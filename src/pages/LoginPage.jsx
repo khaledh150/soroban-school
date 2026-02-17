@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useLanguage } from "../LanguageContext";
-import logoImg from "../assets/logo.png"; 
+import logoImg from "../assets/logo.webp";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -52,12 +52,11 @@ export default function LoginPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-pink-200/50 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
       {/* --- MASSIVE LOGO (With Negative Margin to pull card up) --- */}
-      {/* FIX 2: Reduced logo size for mobile (w-48) and increased negative margin (-mb-10) to raise card */}
-      <div className="relative z-10 -mb-2 md:-mb-7 animate-scale-in shrink-0">
-        <img 
-          src={logoImg} 
-          alt="Wonder Kids Logo" 
-          className="w-74 h-74 md:w-[300px] md:h-[300px] object-contain drop-shadow-2xl"
+      <div className="relative z-10 -mb-18 md:-mb-24 -mt-36 animate-scale-in shrink-0">
+        <img
+          src={logoImg}
+          alt="Wonder Kids Logo"
+          className="w-[26rem] h-[26rem] md:w-[440px] md:h-[440px] object-contain drop-shadow-2xl"
         />
       </div>
 
@@ -161,6 +160,11 @@ export default function LoginPage() {
         </div>
 
       </div>
+
+      {/* Rights Message */}
+      <p className="absolute bottom-3 left-0 right-0 text-center text-xs text-slate-400 z-10">
+        &copy; 2026 Wonder Kids Company Limited. All rights reserved.
+      </p>
     </div>
   );
 }

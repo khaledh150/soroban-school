@@ -5,7 +5,8 @@
       "Bash(npm run dev:*)",
       "Bash(timeout:*)",
       "Bash(ping:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(ls -la \"C:\\\\Apps and Games Dev\\\\soroban-school\\\\scripts\\\\admin\"\" 2>/dev/null || echo \"scripts/admin directory not found \")"
     ]
   }
 }

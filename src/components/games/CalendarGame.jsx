@@ -8,6 +8,9 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../LanguageContext";
+import useWakeLock from "../../hooks/useWakeLock";
+import LoadingCurtain from "../LoadingCurtain";
+import logosBackground from '../../assets/images/wonder-nada-soroban.webp';
 
 // Assets from shared sounds folder
 import rouletteSoundFile from "../../assets/sounds/roulettewheel.mp3";
@@ -192,6 +195,11 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
   const [yearType, setYearType] = useState("normal");
   const [phase, setPhase] = useState("settings");
+
+  // Keep screen awake during gameplay
+  useWakeLock(phase !== 'settings');
+
+  const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState(null);
 
   // Get Ready State
@@ -432,48 +440,58 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
   const startRoundActual = () => {
     clearTimers();
     requestFullscreen();
+    setIsLoading(true);
+    const loadStart = Date.now();
     const d = randomDate();
     setDate(d);
 
-    setPhase("getready");
+    // Ensure loading screen shows for at least 2 seconds
+    const elapsed = Date.now() - loadStart;
+    const remaining = Math.max(0, 2000 - elapsed);
+    const loadId = setTimeout(() => {
+      if (!isMounted.current) return;
+      setIsLoading(false);
+      setPhase("getready");
 
-    // Ready sequence with sound
-    const seq = ["Get", "Ready", "3", "2", "1"];
-    let i = 0;
+      // Ready sequence with sound
+      const seq = ["Get", "Ready", "3", "2", "1", "Go!"];
+      let i = 0;
 
-    const runSeq = () => {
-        if (!isMounted.current) return;
+      const runSeq = () => {
+          if (!isMounted.current) return;
 
-        const text = seq[i];
-        const isWord = text.length > 1;
-        setReadyText(text);
-        setIsReadyWord(isWord);
+          const text = seq[i];
+          const isWord = text.length > 1;
+          setReadyText(text);
+          setIsReadyWord(isWord);
 
-        const delays = [800, 800, 800, 800, 800];
+          const delays = [800, 800, 800, 800, 800, 600];
 
-        if (i < seq.length - 1) {
-            const id = setTimeout(() => {
-                i++;
-                runSeq();
-            }, delays[i]);
-            timeoutsRef.current.push(id);
-        } else {
-            const id = setTimeout(() => {
-                setReadyText("");
-                // Wait 1000ms before triggering spin (exactly like QuizPage)
-                const pauseId = setTimeout(() => {
-                    playSound("buzz");
-                    triggerSpinSequence();
-                }, 1000);
-                timeoutsRef.current.push(pauseId);
-            }, delays[i]);
-            timeoutsRef.current.push(id);
-        }
-    };
+          if (i < seq.length - 1) {
+              const id = setTimeout(() => {
+                  i++;
+                  runSeq();
+              }, delays[i]);
+              timeoutsRef.current.push(id);
+          } else {
+              const id = setTimeout(() => {
+                  setReadyText("");
+                  // Brief pause before triggering spin
+                  const pauseId = setTimeout(() => {
+                      playSound("buzz");
+                      triggerSpinSequence();
+                  }, 500);
+                  timeoutsRef.current.push(pauseId);
+              }, delays[i]);
+              timeoutsRef.current.push(id);
+          }
+      };
 
-    // Play sound and start sequence
-    playSound("ready");
-    runSeq();
+      // Play sound and start sequence
+      playSound("ready");
+      runSeq();
+    }, remaining);
+    timeoutsRef.current.push(loadId);
   };
 
   const handleShowAnswer = () => {
@@ -542,6 +560,17 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
 
   return (
     <div className="w-full h-full flex flex-col items-center overflow-hidden relative">
+
+      <LoadingCurtain visible={isLoading} message="Spinning the Calendar!" messageTH="กำลังหมุนปฏิทิน..." />
+
+      {/* Brand Logos Background */}
+      <div className="absolute inset-x-0 top-12 flex justify-center pointer-events-none overflow-hidden z-0">
+        <img
+          src={logosBackground}
+          alt=""
+          className="w-1/4 h-auto object-contain opacity-40 filter grayscale-[20%] contrast-125"
+        />
+      </div>
 
       {/* BACK BUTTON (ALWAYS VISIBLE) */}
       <button
@@ -669,9 +698,9 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         </div>
       )}
 
-      {/* --- PHASE: GET READY (Same styling as QuizPage) --- */}
+      {/* --- PHASE: GET READY --- */}
       {phase === "getready" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: '#1e1b4b' }}>
           <div
             className={`font-black text-pink-400 leading-none drop-shadow-[0_0_30px_rgba(253,144,215,0.6)] text-center ${isReadyWord ? 'ready-word' : 'ready-number'}`}
           >

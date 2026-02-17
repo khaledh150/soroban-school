@@ -16,10 +16,13 @@ import wrongAnswer from "../assets/sounds/wronganswer.wav";
 import applause from "../assets/sounds/applause.wav";
 import losing from "../assets/sounds/losing-horn.wav";
 
+import useWakeLock from "../hooks/useWakeLock";
+import LoadingCurtain from "../components/LoadingCurtain";
+
 import "../components/quiz/soroban.css";
 import "../components/quiz/quiz.css";
 
-import logosBackground from '../assets/images/wonder-nada-soroban.png';
+import logosBackground from '../assets/images/wonder-nada-soroban.webp';
 
 // English Titles (same as HomePage)
 const titleMap = {
@@ -167,6 +170,10 @@ export default function QuizPage() {
   };
 
   const [view, setView] = useState("start");
+
+  // Keep screen awake during quiz
+  useWakeLock(view === 'quiz');
+
   const [questionNum, setQuestionNum] = useState(1);
   const [flashContent, setFlashContent] = useState(null);
   const [inputValue, setInputValue] = useState("");
@@ -175,6 +182,7 @@ export default function QuizPage() {
   const [scoreText, setScoreText] = useState("");
   const [resultsData, setResultsData] = useState([]);
   const [isMascotBouncing, setIsMascotBouncing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // PC Focus Mode
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -249,6 +257,27 @@ export default function QuizPage() {
     });
   }, []);
 
+  // --- VOICE LOADING & SELECTION ---
+  useEffect(() => {
+    const loadVoices = () => { window.speechSynthesis.getVoices(); };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  const getBestVoice = (langCode) => {
+    const allVoices = window.speechSynthesis.getVoices();
+    const preferred = langCode === 'th'
+      ? ['Kanya', 'Narisa']
+      : ['Google US English', 'Samantha', 'Microsoft Zira'];
+    for (const name of preferred) {
+      const found = allVoices.find(v => v.name.includes(name));
+      if (found) return found;
+    }
+    const langTag = langCode === 'th' ? 'th' : 'en';
+    return allVoices.find(v => v.lang.startsWith(langTag)) || null;
+  };
+
   // --- SPEECH (DICTATION) ---
   const speakText = (text, type = 'number') => {
     if (!settings.dictation || settings.mute || !isMounted.current) return;
@@ -288,6 +317,8 @@ export default function QuizPage() {
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.rate = 1.1;
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
+    const bestVoice = getBestVoice(lang);
+    if (bestVoice) utterance.voice = bestVoice;
 
     window.speechSynthesis.speak(utterance);
   };
@@ -326,6 +357,8 @@ export default function QuizPage() {
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.rate = 1.1;
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
+    const bestVoice2 = getBestVoice(lang);
+    if (bestVoice2) utterance.voice = bestVoice2;
     utterance.onend = () => {
       onEnd && onEnd();
     };
@@ -672,18 +705,16 @@ export default function QuizPage() {
        document.documentElement.requestFullscreen().catch(() => {});
     }
     try {
-      setView("quiz");
+      const loadStart = Date.now();
+      setIsLoading(true);
       setIsMascotBouncing(false);
-      launchConfetti();
       gameState.current.currentIndex = 0;
       gameState.current.answers = [];
       gameState.current.timeLeft = settings.timerMinutes * 60;
       setInputValue("");
       setInputLocked(true);
-      setFlashContent(<div style={{fontSize:"2rem", color:"#888"}}>{t.loading}</div>);
-      
+
       // Sending book (level) AND chapter to the API
-      // FIX: Ensure 'book' is passed correctly
       const questions = await generateQuestions({
         book: currentLevel,
         chapter: currentChapter,
@@ -693,14 +724,23 @@ export default function QuizPage() {
 
       if (!Array.isArray(questions) || questions.length === 0) throw new Error("No questions");
       gameState.current.questions = questions;
-      
-      showReadySetGo(() => { 
-          startTimer(); 
-          loadQuestion(); 
+
+      // Ensure loading screen shows for at least 2 seconds
+      const elapsed = Date.now() - loadStart;
+      if (elapsed < 2000) await new Promise(r => setTimeout(r, 2000 - elapsed));
+
+      setIsLoading(false);
+      setView("quiz");
+      launchConfetti();
+
+      showReadySetGo(() => {
+          startTimer();
+          loadQuestion();
       });
 
     } catch (err) {
       console.error(err);
+      setIsLoading(false);
       alert("Failed to load questions. Check console.");
       setView("start");
     }
@@ -1242,6 +1282,8 @@ export default function QuizPage() {
       <audio ref={el => audioRefs.current['applause'] = el} src={applause} />
       <audio ref={el => audioRefs.current['losing'] = el} src={losing} />
       <div ref={rainSparkleRef} className="rain-sparkle" style={{ display: "none" }}></div>
+
+      <LoadingCurtain visible={isLoading} message="Preparing Your Quiz" messageTH="กำลังเตรียมแบบฝึกหัด..." />
 
       {/* === START SCREEN === */}
       {view === 'start' && (

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabaseClient';
+import InAppBrowserGuard from './components/InAppBrowserGuard';
 
 // Retry wrapper for lazy imports - handles chunk load errors after deployment
 function lazyWithRetry(importFn) {
@@ -74,6 +75,8 @@ function Protected({ children }) {
 
 export default function App() {
   return (
+    <>
+    <InAppBrowserGuard />
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
@@ -118,5 +121,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
+    </>
   );
 }

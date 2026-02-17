@@ -8,6 +8,9 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../LanguageContext";
+import useWakeLock from "../../hooks/useWakeLock";
+import LoadingCurtain from "../LoadingCurtain";
+import logosBackground from '../../assets/images/wonder-nada-soroban.webp';
 
 // Import Audio Assets from shared sounds folder
 import tickSound from "../../assets/sounds/tick.wav";
@@ -63,6 +66,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
   // --- GAME STATE ---
   const [phase, setPhase] = useState("settings");
+
+  // Keep screen awake during gameplay
+  useWakeLock(phase !== 'settings');
+
+  const [isLoading, setIsLoading] = useState(false);
   const [sets, setSets] = useState([]);
   const gameSetsRef = useRef([]);
 
@@ -140,6 +148,20 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     };
   }, []);
 
+  // --- VOICE SELECTION ---
+  const getBestVoice = (langCode) => {
+    const allVoices = window.speechSynthesis.getVoices();
+    const preferred = langCode === 'th'
+      ? ['Kanya', 'Narisa']
+      : ['Google US English', 'Samantha', 'Microsoft Zira'];
+    for (const name of preferred) {
+      const found = allVoices.find(v => v.name.includes(name));
+      if (found) return found;
+    }
+    const langTag = langCode === 'th' ? 'th' : 'en';
+    return allVoices.find(v => v.lang.startsWith(langTag)) || null;
+  };
+
   // --- SPEECH (DICTATION) - Exact copy from QuizPage ---
   const speakText = (text, type = 'number') => {
     if (!ttsEnabled || !isMounted.current) return;
@@ -163,6 +185,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.rate = 1.1;
     utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
+    const bestVoice = getBestVoice(lang);
+    if (bestVoice) utterance.voice = bestVoice;
 
     window.speechSynthesis.speak(utterance);
   };
@@ -210,7 +234,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     }
 
     // Ready sequence with sound
-    const seq = ["Get", "Ready", "3", "2", "1"];
+    const seq = ["Get", "Ready", "3", "2", "1", "Go!"];
     let i = 0;
 
     const runSeq = () => {
@@ -221,7 +245,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         setReadyText(text);
         setIsReadyWord(isWord);
 
-        const delays = [800, 800, 800, 800, 800];
+        const delays = [800, 800, 800, 800, 800, 600];
 
         if (i < seq.length - 1) {
             const id = setTimeout(() => {
@@ -232,17 +256,17 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         } else {
             const id = setTimeout(() => {
                 setReadyText("");
-                // Wait before starting flash
+                // Brief pause before starting flash
                 const pauseId = setTimeout(() => {
                     startFlashing(targetIndex);
-                }, 1000);
+                }, 500);
                 timeoutsRef.current.push(pauseId);
             }, delays[i]);
             timeoutsRef.current.push(id);
         }
     };
 
-    // Play sound and start sequence (first call has sound from handleStart, subsequent calls play here)
+    // Play sound and start sequence
     playSound("ready");
     runSeq();
   };
@@ -322,14 +346,23 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     // Request fullscreen
     requestFullscreen();
 
+    setIsLoading(true);
+    const loadStart = Date.now();
+
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
     const generated = generateRandomSets(totalRounds + 5, nps);
 
     setSets(generated);
     gameSetsRef.current = generated;
 
-    setPracticeHistory([]);
-    startSequenceForSet(0);
+    // Ensure loading screen shows for at least 2 seconds
+    const elapsed = Date.now() - loadStart;
+    const remaining = Math.max(0, 2000 - elapsed);
+    setTimeout(() => {
+      setIsLoading(false);
+      setPracticeHistory([]);
+      startSequenceForSet(0);
+    }, remaining);
   };
 
   // --- INPUT LOGIC ---
@@ -551,6 +584,17 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center relative select-none bg-slate-50 overflow-hidden">
 
+      <LoadingCurtain visible={isLoading} message="Shuffling the Cards!" messageTH="กำลังสับไพ่..." />
+
+      {/* Brand Logos Background */}
+      <div className="absolute inset-x-0 top-12 flex justify-center pointer-events-none overflow-hidden z-0">
+        <img
+          src={logosBackground}
+          alt=""
+          className="w-1/4 h-auto object-contain opacity-40 filter grayscale-[20%] contrast-125"
+        />
+      </div>
+
       {/* Back Button - Always Visible */}
       <button
         onClick={goToMainMenu}
@@ -655,7 +699,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       {/* --- PHASE: GET READY (Same styling as QuizPage) --- */}
       {phase === "getready" && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: '#1e1b4b' }}>
            <div
              className={`font-black text-pink-400 leading-none drop-shadow-[0_0_30px_rgba(253,144,215,0.6)] text-center ${isReadyWord ? 'ready-word' : 'ready-number'}`}
            >
