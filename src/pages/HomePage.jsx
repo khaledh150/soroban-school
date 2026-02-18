@@ -428,6 +428,30 @@ function HomePage() {
                 />
               ))}
             </div>
+
+            {/* Practice Games Section */}
+            <div className="mt-6 pt-4 border-t border-violet-200">
+              <h3 className="text-center text-sm md:text-base font-semibold text-violet-500 mb-3">
+                {t.practiceGames}
+              </h3>
+              <div className="flex justify-center gap-4 flex-wrap">
+                <button
+                  onClick={() => { haptic(); navigate('/games/flashcard'); }}
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 hover:bg-blue-300 transition active:scale-95"
+                >
+                  <span className="material-icons-outlined text-base md:text-lg mr-1">style</span>
+                  <span>{t.flashcardPractice}</span>
+                </button>
+
+                <button
+                  onClick={() => { haptic(); navigate('/games/calendar'); }}
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 hover:bg-blue-300 transition active:scale-95"
+                >
+                  <span className="material-icons-outlined text-base md:text-lg mr-1">calendar_month</span>
+                  <span>{t.nadaCalendar}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -504,17 +528,17 @@ function HomePage() {
             <div className="flex justify-center gap-4 flex-wrap">
               <button
                 onClick={() => { haptic(); navigate('/games/flashcard'); }}
-                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 hover:bg-blue-300 transition active:scale-95"
               >
-                <span className="material-icons-outlined text-lg mr-1 align-middle">style</span>
+                <span className="material-icons-outlined text-base md:text-lg mr-1">style</span>
                 <span>{t.flashcardPractice}</span>
               </button>
 
               <button
                 onClick={() => { haptic(); navigate('/games/calendar'); }}
-                className="flex-1 max-w-[180px] px-4 py-3 rounded-2xl text-sm md:text-base font-bold shadow-md text-white transition active:scale-95 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+                className="inline-flex items-center justify-center px-5 py-2 rounded-2xl text-sm md:text-base font-bold shadow-md bg-blue-200 text-violet-700 hover:bg-blue-300 transition active:scale-95"
               >
-                <span className="material-icons-outlined text-lg mr-1 align-middle">calendar_month</span>
+                <span className="material-icons-outlined text-base md:text-lg mr-1">calendar_month</span>
                 <span>{t.nadaCalendar}</span>
               </button>
             </div>

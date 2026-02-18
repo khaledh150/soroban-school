@@ -567,7 +567,7 @@ const CalendarGame = forwardRef(function CalendarGame(props, ref) {
         <img
           src={logosBackground}
           alt=""
-          className="w-1/4 h-auto object-contain opacity-40 filter grayscale-[20%] contrast-125"
+          className="w-1/4 h-auto object-contain filter grayscale-[20%] contrast-125"
         />
       </div>
 
