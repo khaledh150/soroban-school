@@ -587,11 +587,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       <LoadingCurtain visible={isLoading} message="Shuffling the Cards!" messageTH="กำลังสับไพ่..." />
 
       {/* Brand Logos Background */}
-      <div className="absolute inset-x-0 top-12 flex justify-center pointer-events-none overflow-hidden z-0">
+      <div className="absolute inset-x-0 top-3 flex justify-center pointer-events-none overflow-hidden z-0">
         <img
           src={logosBackground}
           alt=""
-          className="w-1/4 h-auto object-contain filter grayscale-[20%] contrast-125"
+          className="w-[280px] max-w-[320px] h-auto object-contain filter grayscale-[20%] contrast-125"
         />
       </div>
 
@@ -624,11 +624,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       {/* --- PHASE: SETTINGS --- */}
       {phase === "settings" && (
-        <div className="flex-1 w-full flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300 px-4 pt-16 pb-4 overflow-y-auto">
+        <div className="flex-1 w-full flex flex-col items-center justify-center px-4 pt-16 pb-4 overflow-y-auto">
 
-          {/* Game Title - ABOVE Settings Panel */}
-          <div className="mb-6 text-center">
-            <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-pink-500 via-violet-500 to-blue-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">
+          {/* Title */}
+          <div className="mb-6 mt-16 text-center">
+            <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">
               ⚡ FLASHCARD
             </h1>
             <p className="text-lg sm:text-xl font-bold text-slate-500 mt-1 tracking-widest uppercase">
@@ -654,9 +654,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                 <div className="bg-slate-50 p-3 rounded-2xl">
                    <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.rounds}</label>
                    <div className="flex items-center justify-between">
-                      <button onClick={() => setTotalRounds(Math.max(1, totalRounds - 1))} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">-</button>
+                      <button onClick={() => setTotalRounds(Math.max(1, totalRounds - 1))} className="w-8 h-8 rounded-lg bg-white text-emerald-600 font-bold shadow-sm">−</button>
                       <span className="text-2xl font-black text-slate-800">{totalRounds}</span>
-                      <button onClick={() => setTotalRounds(Math.min(50, totalRounds + 1))} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">+</button>
+                      <button onClick={() => setTotalRounds(Math.min(50, totalRounds + 1))} className="w-8 h-8 rounded-lg bg-white text-emerald-600 font-bold shadow-sm">+</button>
                    </div>
                 </div>
             </div>
@@ -665,9 +665,9 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             <div className="bg-slate-50 p-3 rounded-2xl">
                <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.numbersPerSet}</label>
                <div className="flex items-center justify-between px-4">
-                  <button onClick={() => setNumbersPerSet(Math.max(1, numbersPerSet - 1))} className="w-10 h-10 rounded-xl bg-white text-xl font-bold text-violet-600 shadow-sm">-</button>
+                  <button onClick={() => setNumbersPerSet(Math.max(1, numbersPerSet - 1))} className="w-10 h-10 rounded-xl bg-white text-emerald-600 font-bold shadow-sm text-xl active:scale-90 transition-all">−</button>
                   <span className="text-3xl font-black text-slate-800">{numbersPerSet}</span>
-                  <button onClick={() => setNumbersPerSet(Math.min(20, numbersPerSet + 1))} className="w-10 h-10 rounded-xl bg-white text-xl font-bold text-violet-600 shadow-sm">+</button>
+                  <button onClick={() => setNumbersPerSet(Math.min(20, numbersPerSet + 1))} className="w-10 h-10 rounded-xl bg-white text-emerald-600 font-bold shadow-sm text-xl active:scale-90 transition-all">+</button>
                </div>
             </div>
 
@@ -675,7 +675,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             <div className="flex gap-3">
                <div className="flex-1 bg-slate-50 p-3 rounded-2xl flex flex-col gap-2">
                   <label className="text-slate-400 font-bold text-xs uppercase ml-1">{t.mode}</label>
-                  <button onClick={() => setRevealMode(revealMode === 'each' ? 'end' : 'each')} className="flex-1 bg-white rounded-xl font-bold text-violet-700 shadow-sm py-2 text-sm border-2 border-violet-100">
+                  <button onClick={() => setRevealMode(revealMode === 'each' ? 'end' : 'each')} className="flex-1 bg-white rounded-xl font-bold text-emerald-700 shadow-sm py-2 text-sm border-2 border-emerald-100">
                       {revealMode === 'each' ? t.modePractice : t.modeCompetition}
                   </button>
                </div>
@@ -687,12 +687,14 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                </div>
             </div>
 
-            <button
-              onClick={handleStart}
-              className="mt-2 w-full py-4 rounded-2xl text-2xl font-black text-violet-700 uppercase tracking-widest bg-blue-200 shadow-md hover:bg-blue-300 hover:scale-[1.02] active:scale-95 transition-all"
-            >
-              {t.startGame}
-            </button>
+            {/* Large Circular Start Button */}
+            <div className="flex justify-center mt-3">
+              <button onClick={handleStart}
+                className="w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_8px_30px_rgba(245,180,0,0.45)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all border-4 border-amber-200/60">
+                <span className="text-3xl sm:text-4xl font-black text-amber-900 uppercase tracking-wider drop-shadow-sm">START</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}
@@ -759,10 +761,10 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                 {/* Footer Buttons */}
                 {revealedSummaryCount >= practiceHistory.length && (
                     <div className="flex flex-col gap-3 mt-4 shrink-0 animate-in slide-in-from-bottom-4 fade-in duration-500">
-                       <button onClick={handleStart} className="w-full py-4 rounded-2xl bg-blue-200 text-violet-700 font-black text-xl shadow-md hover:bg-blue-300 active:scale-95 transition-all">
+                       <button onClick={handleStart} className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-300 to-amber-500 text-amber-900 font-black text-xl shadow-md hover:scale-[1.02] active:scale-95 transition-all">
                           {t.playAgain}
                        </button>
-                       <button onClick={handleBackToSettings} className="w-full py-3 rounded-xl bg-blue-100 text-violet-600 font-bold active:scale-95 transition-all">
+                       <button onClick={handleBackToSettings} className="w-full py-3 rounded-xl bg-slate-100 text-slate-600 font-bold active:scale-95 transition-all">
                           {t.mainMenu}
                        </button>
                     </div>
