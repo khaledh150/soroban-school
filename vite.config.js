@@ -10,29 +10,49 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       // These assets must exist in your 'public' folder for PWA to work!
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'favicon-96x96.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Soroban for School',
         short_name: 'Soroban School',
         description: 'Master mental math with Soroban for School. A fun, gamified abacus training platform.',
-        theme_color: '#111827', // Matched to your dark theme background
+        theme_color: '#111827',
         background_color: '#111827',
         display: 'standalone',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'android/android-launchericon-48-48.png',
+            sizes: '48x48',
+            type: 'image/png'
+          },
+          {
+            src: 'android/android-launchericon-72-72.png',
+            sizes: '72x72',
+            type: 'image/png'
+          },
+          {
+            src: 'android/android-launchericon-96-96.png',
+            sizes: '96x96',
+            type: 'image/png'
+          },
+          {
+            src: 'android/android-launchericon-144-144.png',
+            sizes: '144x144',
+            type: 'image/png'
+          },
+          {
+            src: 'android/android-launchericon-192-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'android/android-launchericon-512-512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'android/android-launchericon-512-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
