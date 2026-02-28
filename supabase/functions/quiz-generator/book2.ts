@@ -133,38 +133,72 @@ function randomBook2Chapter3TenBuddyPlus7(numQuestions = 10): Question[] {
 
 function randomBook2Chapter4TenBuddyPlus6(numQuestions = 10): Question[] {
   const questions: Question[] = [];
-  const uniqueQuestions = new Set<string>();
+  const seen = new Set<string>();
   let attempts = 0;
-  while (questions.length < numQuestions && attempts < 4000) {
+
+  while (questions.length < numQuestions && attempts < 8000) {
     attempts++;
-    let A = 0, B = 0, C = 0, op1: "+" | "-" = "+", op2: "+" | "-" = "+";
-    const scenario = Math.floor(Math.random() * 4);
-    if (scenario === 0) {
-      op1 = "+"; A = Math.floor(Math.random() * 4) + 1; op2 = "+";
-      const option1 = 2; const option2 = 8 - A;
-      const bOptions = [option1]; if (option2 >= 1 && option2 <= 9 && option2 !== 2) { bOptions.push(option2); }
-      B = bOptions[Math.floor(Math.random() * bOptions.length)]; C = 2;
-    } else if (scenario === 1) {
-      op1 = "+"; A = 5; B = 8 - A; if (B < 1 || B > 9) continue;
-      op2 = "+"; C = 2;
-    } else if (scenario === 2) {
-      op1 = "+"; A = Math.floor(Math.random() * 4) + 6; op2 = "+";
-      const optB1 = 2; const optB2 = 18 - A;
-      const bOptions: number[] = []; if (optB1 >= 1 && optB1 <= 9) bOptions.push(optB1); if (optB2 >= 1 && optB2 <= 9 && optB2 !== optB1) bOptions.push(optB2);
-      if (bOptions.length === 0) continue; B = bOptions[Math.floor(Math.random() * bOptions.length)];
-      C = 2;
+    let A = 1, B = 1, C = 1;
+    let op1: "+" | "-" = "+", op2: "+" | "-" = "+";
+
+    const ruleType = Math.floor(Math.random() * 14);
+
+    if (ruleType === 0) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 5; B = 6; C = Math.floor(Math.random() * 9) + 1;
+    } else if (ruleType === 1) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 1; B = 5 - A; C = 6;
+    } else if (ruleType === 2) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 1; B = 6 - A; C = 6;
+    } else if (ruleType === 3) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 1; B = 7 - A; C = 6;
+    } else if (ruleType === 4) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 1; B = 8 - A; C = 6;
+    } else if (ruleType === 5) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 6; B = 15 - A; C = 6;
+    } else if (ruleType === 6) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 6; B = 16 - A; C = 6;
+    } else if (ruleType === 7) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 6; B = 17 - A; C = 6;
+    } else if (ruleType === 8) {
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 6; B = 18 - A; C = 6;
+    } else if (ruleType === 9) {
+      op1 = "-"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 6; B = A - 5; C = 6;
+    } else if (ruleType === 10) {
+      op1 = "-"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 6; B = A - 6; C = 6;
+    } else if (ruleType === 11) {
+      op1 = "-"; op2 = "+";
+      A = Math.floor(Math.random() * 3) + 7; B = A - 7; C = 6;
+    } else if (ruleType === 12) {
+      op1 = "-"; op2 = "+";
+      A = Math.floor(Math.random() * 2) + 8; B = A - 8; C = 6;
     } else {
-      op1 = "-"; A = Math.floor(Math.random() * 2) + 8; B = A - 8; if (B < 1 || B > 9) continue;
-      op2 = "+"; C = 2;
+      op1 = "+"; op2 = "+";
+      A = Math.floor(Math.random() * 4) + 5; B = 5; C = 6;
     }
+
+    if (![A, B, C].every((x) => x >= 1 && x <= 14)) continue;
+
+    const expr = `${A} ${op1} ${B} ${op2} ${C}`;
     let result = op1 === "+" ? A + B : A - B;
     result = op2 === "+" ? result + C : result - C;
-    const questionString = `${A} ${op1} ${B} ${op2} ${C}`;
-    if (A >= 1 && A <= 9 && B >= 1 && B <= 9 && C >= 1 && C <= 9 && result >= 0 && result <= 50 && !uniqueQuestions.has(questionString)) {
-       questions.push({ q: questionString, a: result.toString() });
-       uniqueQuestions.add(questionString);
+
+    if (result >= 0 && result <= 100 && !seen.has(expr)) {
+      questions.push({ q: expr, a: result.toString() });
+      seen.add(expr);
     }
   }
+
   return fillQuestions(questions, numQuestions!);
 }
 

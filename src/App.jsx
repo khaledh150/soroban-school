@@ -5,7 +5,7 @@ import { supabase } from './supabaseClient';
 import InAppBrowserGuard from './components/InAppBrowserGuard';
 
 // Increment this manually to force a cache reset on next deploy
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.4";
 
 // Force refresh when a new version is deployed
 function useForceRefreshOnNewVersion() {

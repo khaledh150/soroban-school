@@ -86,7 +86,8 @@ function randomBook6Chapter2(numQuestions = 10): Question[] {
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const A = Math.floor(Math.random() * 90) + 10; // 10-99
-    const B = Math.floor(Math.random() * 9) + 1;   // 1-9
+    if (A === 11) continue; // exclude 11
+    const B = Math.floor(Math.random() * 8) + 2;   // 2-9 (exclude 1)
     const C = A * B;
 
     const qStr = `${A} × ${B}`;
@@ -147,7 +148,8 @@ function randomBook6Chapter4(numQuestions = 10): Question[] {
   while (questions.length < numQuestions && attempts < 4000) {
     attempts++;
     const A = Math.floor(Math.random() * 900) + 100; // 100-999
-    const B = Math.floor(Math.random() * 9) + 1;     // 1-9
+    if (A === 111) continue; // exclude 111
+    const B = Math.floor(Math.random() * 8) + 2;     // 2-9 (exclude 1)
     const C = A * B;
 
     const qStr = `${A} × ${B}`;
