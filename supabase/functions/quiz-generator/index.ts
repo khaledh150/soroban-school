@@ -1,6 +1,5 @@
 // supabase/functions/quiz-generator/index.ts
 
-import { serve } from "std/http/server.ts";
 import { GenFn, book1Generators } from "./book1.ts";
 import { book2Generators } from "./book2.ts";
 import { book3Generators } from "./book3.ts";
@@ -64,7 +63,7 @@ function getGenerator(book: number, chapter: number): GenFn {
 }
 
 // ---------- HTTP handler ----------
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
