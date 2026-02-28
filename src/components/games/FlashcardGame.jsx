@@ -55,7 +55,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const { lang, t } = useLanguage();
 
   // --- SETTINGS ---
-  const [speed, setSpeed] = useState(1.0);
+  const [speed, setSpeed] = useState(0.8);
   const [numbersPerSet, setNumbersPerSet] = useState(5);
   const [totalRounds, setTotalRounds] = useState(5);
   const [revealMode, setRevealMode] = useState("each");
@@ -162,33 +162,74 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     return allVoices.find(v => v.lang.startsWith(langTag)) || null;
   };
 
-  // --- SPEECH (DICTATION) - Exact copy from QuizPage ---
-  const speakText = (text, type = 'number') => {
+  // --- SPEECH (DICTATION) - Always English, digit-by-digit ---
+  const speakText = (text, type = "number") => {
     if (!ttsEnabled || !isMounted.current) return;
-
     window.speechSynthesis.cancel();
-
     let spokenText = text;
-
-    if (text === 'equals') {
-      spokenText = lang === 'th' ? 'เท่ากับ' : 'Equals';
-    } else if (lang === 'th') {
-      if (type === 'op') {
-        spokenText = text.replace('+', 'บวก ').replace('-', 'ลบ ');
-      }
-    } else {
-      if (type === 'op') {
-        spokenText = text.replace('+', 'Plus ').replace('-', 'Minus ');
-      }
+    let forceRate = null;
+    if (text === "equals") {
+      spokenText = "Equals";
+      forceRate = 1.0;
+    } else if (type === "op") {
+      const sign = text.startsWith("-") ? "Minus" : "Plus";
+      const num = text.replace(/^[+-]/, "");
+      const digits = num.split("").join(" ");
+      spokenText = `${sign} ${digits}`;
     }
-
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = 1.1;
-    utterance.lang = lang === 'th' ? 'th-TH' : 'en-US';
-    const bestVoice = getBestVoice(lang);
+    const numericPart = text.replace(/^[+-]/, "");
+    const digitLen = numericPart.length;
+    let rate = 1.1;
+    if (digitLen >= 6) {
+      rate = 2.8;
+      if (speed >= 0.8) rate = 2.4;
+      if (speed >= 1.5) rate = 2.0;
+    } else if (digitLen >= 5) {
+      rate = 2.6;
+      if (speed >= 0.8) rate = 2.2;
+      if (speed >= 1.5) rate = 1.8;
+    } else if (digitLen >= 4) {
+      rate = 2.4;
+      if (speed >= 0.8) rate = 2.0;
+      if (speed >= 1.5) rate = 1.6;
+    } else if (digitLen >= 3) {
+      rate = 2.2;
+      if (speed >= 0.8) rate = 1.8;
+      if (speed >= 1.5) rate = 1.4;
+    } else if (digitLen >= 2) {
+      rate = 1.8;
+      if (speed >= 0.8) rate = 1.4;
+      if (speed >= 1.5) rate = 1.1;
+    }
+    utterance.rate = forceRate !== null ? forceRate : rate;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = "en-US";
+    const bestVoice = getBestVoice("en");
     if (bestVoice) utterance.voice = bestVoice;
-
     window.speechSynthesis.speak(utterance);
+  };
+
+  // --- SPEECH (FLASH DICTATION) - Prefire with cancel + delay ---
+  const speakFlash = (num) => {
+    if (!ttsEnabled || !isMounted.current) return;
+    window.speechSynthesis.cancel();
+    const sign = num >= 0 ? "Plus" : "Minus";
+    const absStr = Math.abs(num).toString();
+    const digitPart = absStr.length === 1 ? absStr : absStr.split("").join(" ");
+    const text = `${sign} ${digitPart}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = speed <= 0.5 ? 1.2 : speed <= 1.0 ? 1.0 : 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    utterance.lang = "en-US";
+    const bestVoice = getBestVoice("en");
+    if (bestVoice) utterance.voice = bestVoice;
+    setTimeout(() => {
+      if (!isMounted.current) return;
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   };
 
 
@@ -271,60 +312,60 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     runSeq();
   };
 
-  // Exact copy of QuizPage flashQuestionTokens logic
+  // Flash with prefire timing - TTS fires BEFORE the visual number appears
   const startFlashing = (forcedIndex) => {
-    // Clear any existing flash timer (same as QuizPage: gameState.current.flashTokenTimer)
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
-
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
-
     setPhase("playing");
-
     if (!gameSetsRef.current[forcedIndex]) return;
-
     let idx = 0;
 
-    function showNext() {
+    function getPrefire(num) {
+      const digitCount = Math.abs(num).toString().length;
+      if (digitCount >= 6) return 500;
+      if (digitCount >= 5) return 470;
+      if (digitCount >= 4) return 440;
+      if (digitCount >= 3) return 410;
+      if (digitCount >= 2) return 380;
+      return 350;
+    }
+
+    function showAndSpeak() {
       if (!isMounted.current) return;
+      if (idx >= nps) return;
+      const num = gameSetsRef.current[forcedIndex][idx];
+      const prefire = getPrefire(num);
 
-      if (idx < nps) {
-        const num = gameSetsRef.current[forcedIndex][idx];
+      // Speak early so dictation leads the visual flash
+      speakFlash(num);
 
-        // Update display
+      const showId = setTimeout(() => {
+        if (!isMounted.current) return;
         setCurrentNumberIndex(idx);
-
-        // Play tick sound (same as QuizPage)
         playSound("tick");
 
-        // Speak number (same format as QuizPage: "+45" or "-123" with type 'op')
-        const textForSpeech = num >= 0 ? `+${Math.abs(num)}` : `-${Math.abs(num)}`;
-        speakText(textForSpeech, 'op');
-
-        // Add extra time to ensure dictation completes before next number
         const digitCount = Math.abs(num).toString().length;
-        let delayMultiplier = 1.5; // Base: 1.5x for 1-2 digit numbers
-        if (digitCount >= 4) delayMultiplier = 2.5;
-        else if (digitCount >= 3) delayMultiplier = 2;
+        let delayMultiplier = 1.5;
+        if (digitCount >= 6) delayMultiplier = 3.5;
+        else if (digitCount >= 5) delayMultiplier = 3.0;
+        else if (digitCount >= 4) delayMultiplier = 2.5;
+        else if (digitCount >= 3) delayMultiplier = 2.0;
+        else if (digitCount >= 2) delayMultiplier = 1.8;
         const delay = speed * 1000 * delayMultiplier;
 
         if (idx === nps - 1) {
-          // Last number - after delay, speak equals and go to input (same as QuizPage)
           flashTimerRef.current = setTimeout(() => {
             if (!isMounted.current) return;
             speakText("equals");
             setPhase("input");
           }, delay);
         } else {
-          // Not last - after delay, show next number (same as QuizPage)
-          flashTimerRef.current = setTimeout(() => {
-            idx++;
-            showNext();
-          }, delay);
+          flashTimerRef.current = setTimeout(() => { idx++; showAndSpeak(); }, delay);
         }
-      }
+      }, prefire);
+      timeoutsRef.current.push(showId);
     }
-
-    showNext();
+    showAndSpeak();
   };
 
   // Request fullscreen
@@ -451,6 +492,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   // Start next round without the ready overlay (for practice mode auto-advance)
   const startNextRoundDirectly = (targetIndex) => {
     clearTimers();
+    window.speechSynthesis.cancel(); // clear leftover speech from previous round
     setPhase("playing"); // Set phase immediately to prevent feedback from showing new answer
     setCurrentSetIndex(targetIndex);
     setCurrentNumberIndex(0);
@@ -469,7 +511,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     // Short delay then start flashing directly
     const id = setTimeout(() => {
       startFlashing(targetIndex);
-    }, 300);
+    }, 50);
     timeoutsRef.current.push(id);
   };
 
@@ -642,12 +684,10 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                 {/* Speed */}
                 <div className="bg-slate-50 p-3 rounded-2xl">
                    <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.speedSec}</label>
-                   <div className="flex items-center justify-center">
-                      <input
-                         type="number" min={0.3} max={5} step={0.1}
-                         value={speed} onChange={(e) => setSpeed(Number(e.target.value))}
-                         className="w-full bg-transparent text-center text-2xl font-black text-slate-800 focus:outline-none"
-                      />
+                   <div className="flex items-center justify-between">
+                      <button onClick={() => setSpeed(prev => Math.round(Math.max(0.1, prev - 0.1) * 10) / 10)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">−</button>
+                      <span className="text-2xl font-black text-slate-800">{speed.toFixed(1)}</span>
+                      <button onClick={() => setSpeed(prev => Math.round(Math.min(10.0, prev + 0.1) * 10) / 10)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">+</button>
                    </div>
                 </div>
                 {/* Rounds */}
