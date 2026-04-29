@@ -98,6 +98,11 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const timeoutsRef = useRef([]);
   const isMounted = useRef(true);
 
+  // Web Audio for zero-latency tick at ultra-fast speeds
+  const audioCtxRef = useRef(null);
+  const tickBufferRef = useRef(null);
+  const feedbackTimeoutRef = useRef(null);
+
 
   useEffect(() => {
     // Load all audio assets on mount to prevent PC playback delays
@@ -108,6 +113,48 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     if (audioRefs.current.tick) audioRefs.current.tick.volume = 0.7;
     if (audioRefs.current.ding) audioRefs.current.ding.volume = 1.0;
   }, []);
+
+  // Initialize Web Audio API and decode tick buffer once
+  useEffect(() => {
+    let cancelled = false;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtxRef.current = new Ctx();
+      fetch(tickSound)
+        .then(r => r.arrayBuffer())
+        .then(buf => audioCtxRef.current.decodeAudioData(buf))
+        .then(decoded => {
+          if (!cancelled) tickBufferRef.current = decoded;
+        })
+        .catch(() => {});
+    } catch (e) {
+      // Web Audio unavailable — playFastTick will silently no-op
+    }
+    return () => { cancelled = true; };
+  }, []);
+
+  const stepSpeed = (dir) => {
+    setSpeed(prev => {
+      const cur = typeof prev === "number" ? prev : parseFloat(prev) || 0.8;
+      const step = cur <= 0.1 ? 0.01 : 0.05;
+      const next = dir > 0 ? cur + step : cur - step;
+      const clamped = Math.min(10, Math.max(0.01, next));
+      return Math.round(clamped * 100) / 100;
+    });
+  };
+
+  const playFastTick = () => {
+    const ctx = audioCtxRef.current;
+    const buf = tickBufferRef.current;
+    if (!ctx || !buf) return;
+    try {
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (e) { /* ignore */ }
+  };
 
   // Ref to store current flash timer (same pattern as QuizPage)
   const flashTimerRef = useRef(null);
@@ -252,6 +299,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     } catch (e) {
       // Silently fail if speech API not available
     }
+    // Resume the AudioContext on user gesture (mobile autoplay policy)
+    try {
+      if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+        audioCtxRef.current.resume();
+      }
+    } catch (e) { /* ignore */ }
   };
 
   // --- GAME LOGIC ---
@@ -316,6 +369,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const startFlashing = (forcedIndex) => {
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
+    const speedNum = typeof speed === "number" ? speed : parseFloat(speed) || 0.8;
+    const isUltraFast = speedNum <= 0.4;
     setPhase("playing");
     if (!gameSetsRef.current[forcedIndex]) return;
     let idx = 0;
@@ -334,33 +389,37 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       if (!isMounted.current) return;
       if (idx >= nps) return;
       const num = gameSetsRef.current[forcedIndex][idx];
-      const prefire = getPrefire(num);
+      const prefire = isUltraFast ? 0 : getPrefire(num);
 
-      // Speak early so dictation leads the visual flash
-      speakFlash(num);
+      // Speak early so dictation leads the visual flash (skip at ultra-fast)
+      if (!isUltraFast) speakFlash(num);
 
       const showId = setTimeout(() => {
         if (!isMounted.current) return;
         setCurrentNumberIndex(idx);
-        playSound("tick");
+        playFastTick();
 
-        const digitCount = Math.abs(num).toString().length;
-        let delayMultiplier = 1.5;
-        if (digitCount >= 6) delayMultiplier = 3.5;
-        else if (digitCount >= 5) delayMultiplier = 3.0;
-        else if (digitCount >= 4) delayMultiplier = 2.5;
-        else if (digitCount >= 3) delayMultiplier = 2.0;
-        else if (digitCount >= 2) delayMultiplier = 1.8;
-        const delay = speed * 1000 * delayMultiplier;
+        let finalDelay = speedNum * 1000;
+        if (!isUltraFast) {
+          const digitCount = Math.abs(num).toString().length;
+          let delayMultiplier = 1.5;
+          if (digitCount >= 6) delayMultiplier = 3.5;
+          else if (digitCount >= 5) delayMultiplier = 3.0;
+          else if (digitCount >= 4) delayMultiplier = 2.5;
+          else if (digitCount >= 3) delayMultiplier = 2.0;
+          else if (digitCount >= 2) delayMultiplier = 1.8;
+          finalDelay *= delayMultiplier;
+        }
+        finalDelay = Math.max(4, finalDelay);
 
         if (idx === nps - 1) {
           flashTimerRef.current = setTimeout(() => {
             if (!isMounted.current) return;
-            speakText("equals");
+            if (!isUltraFast) speakText("equals");
             setPhase("input");
-          }, delay);
+          }, finalDelay);
         } else {
-          flashTimerRef.current = setTimeout(() => { idx++; showAndSpeak(); }, delay);
+          flashTimerRef.current = setTimeout(() => { idx++; showAndSpeak(); }, finalDelay);
         }
       }, prefire);
       timeoutsRef.current.push(showId);
@@ -419,21 +478,69 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   };
 
   const handleKeyDown = (e) => {
-    if (phase !== "input") return;
     const key = e.key;
-    if (!isNaN(key)) {
-        if (userInput.length < 6) setUserInput(prev => prev + key);
-    } else if (key === "Backspace") {
-        setUserInput(prev => prev.slice(0, -1));
-    } else if (key === "Enter") {
-        handleSubmitAnswer();
+
+    // Don't hijack typing into the speed input (or any future input/textarea)
+    const tag = e.target && e.target.tagName;
+    const typingInField = tag === "INPUT" || tag === "TEXTAREA";
+
+    // Esc — universal back-out from any non-settings phase
+    if (key === "Escape" && phase !== "settings") {
+      handleBackToSettings();
+      return;
+    }
+
+    if (phase === "settings") {
+      if (typingInField) return; // let the speed input handle Enter/Space
+      if (key === "Enter" || key === " " || key === "Spacebar") {
+        e.preventDefault();
+        handleStart();
+      }
+      return;
+    }
+
+    if (phase === "input") {
+      if (revealMode === "each") {
+        if (!isNaN(key) && key !== " ") {
+          if (userInput.length < 6) setUserInput(prev => prev + key);
+        } else if (key === "Backspace" || key === "Delete") {
+          setUserInput(prev => prev.slice(0, -1));
+        } else if (key === "Enter") {
+          handleSubmitAnswer();
+        }
+      } else {
+        // Competition mode
+        if (key === "Enter" || key === " " || key === "Spacebar") {
+          e.preventDefault();
+          handleCompetitionNext();
+        }
+      }
+      return;
+    }
+
+    if (phase === "feedback") {
+      if (key === "Enter") {
+        if (feedbackTimeoutRef.current) {
+          clearTimeout(feedbackTimeoutRef.current);
+          feedbackTimeoutRef.current = null;
+        }
+        handleNextRound(true);
+      }
+      return;
+    }
+
+    if (phase === "summary") {
+      if (key === "Enter" && revealedSummaryCount >= practiceHistory.length) {
+        handleStart();
+      }
+      return;
     }
   };
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, userInput]);
+  }, [phase, userInput, revealMode, revealedSummaryCount, practiceHistory.length]);
 
   const handleSubmitAnswer = () => {
     if (userInput === "" && revealMode === "each") return; // Only require input in practice mode
@@ -462,8 +569,10 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         // Auto-advance after showing feedback (like quiz logic)
         const feedbackDelay = isCorrect ? 1200 : 2000; // Longer delay for wrong to show correct answer
         const autoAdvanceId = setTimeout(() => {
+            feedbackTimeoutRef.current = null;
             handleNextRound(true);
         }, feedbackDelay);
+        feedbackTimeoutRef.current = autoAdvanceId;
         timeoutsRef.current.push(autoAdvanceId);
     }
     // Competition mode doesn't auto-advance - user clicks Next/Results button
@@ -685,9 +794,28 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                 <div className="bg-slate-50 p-3 rounded-2xl">
                    <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.speedSec}</label>
                    <div className="flex items-center justify-between">
-                      <button onClick={() => setSpeed(prev => Math.round(Math.max(0.1, prev - 0.1) * 10) / 10)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">−</button>
-                      <span className="text-2xl font-black text-slate-800">{speed.toFixed(1)}</span>
-                      <button onClick={() => setSpeed(prev => Math.round(Math.min(10.0, prev + 0.1) * 10) / 10)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">+</button>
+                      <button onClick={() => stepSpeed(-1)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">−</button>
+                      <input
+                        type="number"
+                        min="0.01"
+                        max="10"
+                        step="0.01"
+                        value={speed}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === "") { setSpeed(""); return; }
+                          const n = parseFloat(v);
+                          if (!isNaN(n)) setSpeed(n);
+                        }}
+                        onBlur={(e) => {
+                          const n = parseFloat(e.target.value);
+                          if (isNaN(n) || n < 0.01) setSpeed(0.01);
+                          else if (n > 10) setSpeed(10);
+                          else setSpeed(Math.round(n * 100) / 100);
+                        }}
+                        className="text-2xl font-black text-slate-800 w-20 text-center bg-transparent border-b-2 border-slate-200 outline-none focus:border-violet-500 transition-colors"
+                      />
+                      <button onClick={() => stepSpeed(1)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">+</button>
                    </div>
                 </div>
                 {/* Rounds */}
@@ -741,7 +869,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       {/* --- PHASE: GET READY (Same styling as QuizPage) --- */}
       {phase === "getready" && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: '#1e1b4b' }}>
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: '#1e1b4b', minHeight: '100vh' }}>
            <div
              className={`font-black text-pink-400 leading-none drop-shadow-[0_0_30px_rgba(253,144,215,0.6)] text-center ${isReadyWord ? 'ready-word' : 'ready-number'}`}
            >
@@ -942,10 +1070,13 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
           100% { transform: scale(1); opacity: 1; }
         }
         /* Ready overlay - same sizing as QuizPage */
+        /* Static fallback first for browsers without clamp() support */
         .ready-number {
+          font-size: 15rem;
           font-size: clamp(10rem, 55vw, 25rem);
         }
         .ready-word {
+          font-size: 7rem;
           font-size: clamp(5rem, 20vw, 10rem);
         }
         @media (max-height: 600px) and (orientation: landscape) {
