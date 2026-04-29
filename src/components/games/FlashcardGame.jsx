@@ -52,12 +52,12 @@ function generateRandomSets(numSets = 30, numbersPerSet = 9) {
 
 const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const navigate = useNavigate();
-  const { lang, t } = useLanguage();
+  const { lang, toggleLang, t } = useLanguage();
 
   // --- SETTINGS ---
-  const [speed, setSpeed] = useState(0.8);
+  const [speedMs, setSpeedMs] = useState(300);
   const [numbersPerSet, setNumbersPerSet] = useState(5);
-  const [totalRounds, setTotalRounds] = useState(5);
+  const [totalRounds, setTotalRounds] = useState(1);
   const [revealMode, setRevealMode] = useState("each");
   const [ttsEnabled, setTtsEnabled] = useState(true);
 
@@ -102,6 +102,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const audioCtxRef = useRef(null);
   const tickBufferRef = useRef(null);
   const feedbackTimeoutRef = useRef(null);
+  const readySeqIdRef = useRef(0);
 
 
   useEffect(() => {
@@ -135,14 +136,36 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   }, []);
 
   const stepSpeed = (dir) => {
-    setSpeed(prev => {
-      const cur = typeof prev === "number" ? prev : parseFloat(prev) || 0.8;
-      const step = cur <= 0.1 ? 0.01 : 0.05;
-      const next = dir > 0 ? cur + step : cur - step;
-      const clamped = Math.min(10, Math.max(0.01, next));
-      return Math.round(clamped * 100) / 100;
+    setSpeedMs(prev => {
+      const cur = parseInt(prev, 10) || 800;
+      const next = dir > 0 ? cur + 5 : cur - 5;
+      return Math.min(10000, Math.max(5, next));
     });
   };
+
+  const holdIntervalRef = useRef(null);
+  const holdTimeoutRef = useRef(null);
+
+  const startHolding = useCallback((fn, dir) => {
+    if (holdTimeoutRef.current || holdIntervalRef.current) return;
+    fn(dir);
+    holdTimeoutRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(() => {
+        fn(dir);
+      }, 70);
+    }, 350);
+  }, []);
+
+  const stopHolding = useCallback(() => {
+    if (holdTimeoutRef.current) {
+      clearTimeout(holdTimeoutRef.current);
+      holdTimeoutRef.current = null;
+    }
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+      holdIntervalRef.current = null;
+    }
+  }, []);
 
   const playFastTick = () => {
     const ctx = audioCtxRef.current;
@@ -164,6 +187,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     timeoutsRef.current.forEach((id) => clearTimeout(id));
     timeoutsRef.current = [];
+    // Invalidate any in-flight ready sequence so its setTimeouts can't fire stale
+    readySeqIdRef.current += 1;
   };
 
   useEffect(() => {
@@ -213,8 +238,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const speakText = (text, type = "number") => {
     if (!ttsEnabled || !isMounted.current) return;
     window.speechSynthesis.cancel();
+    
     let spokenText = text;
     let forceRate = null;
+    let targetLang = "en-US";
+    let voiceCode = "en";
+
     if (text === "equals") {
       spokenText = "Equals";
       forceRate = 1.0;
@@ -223,38 +252,50 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       const num = text.replace(/^[+-]/, "");
       const digits = num.split("").join(" ");
       spokenText = `${sign} ${digits}`;
+    } else if (type === "word" && lang === "th") {
+      targetLang = "th-TH";
+      voiceCode = "th";
     }
+
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    const numericPart = text.replace(/^[+-]/, "");
-    const digitLen = numericPart.length;
-    let rate = 1.1;
-    if (digitLen >= 6) {
-      rate = 2.8;
-      if (speed >= 0.8) rate = 2.4;
-      if (speed >= 1.5) rate = 2.0;
-    } else if (digitLen >= 5) {
-      rate = 2.6;
-      if (speed >= 0.8) rate = 2.2;
-      if (speed >= 1.5) rate = 1.8;
-    } else if (digitLen >= 4) {
-      rate = 2.4;
-      if (speed >= 0.8) rate = 2.0;
-      if (speed >= 1.5) rate = 1.6;
-    } else if (digitLen >= 3) {
-      rate = 2.2;
-      if (speed >= 0.8) rate = 1.8;
-      if (speed >= 1.5) rate = 1.4;
-    } else if (digitLen >= 2) {
-      rate = 1.8;
-      if (speed >= 0.8) rate = 1.4;
-      if (speed >= 1.5) rate = 1.1;
+    utterance.lang = targetLang;
+    const bestVoice = getBestVoice(voiceCode);
+    if (bestVoice) utterance.voice = bestVoice;
+
+    if (type === "number" || type === "op") {
+      const numericPart = text.replace(/^[+-]/, "");
+      const digitLen = numericPart.length;
+      let rate = 1.1;
+      if (digitLen >= 6) {
+        rate = 2.8;
+        if (speedMs >= 800) rate = 2.4;
+        if (speedMs >= 1500) rate = 2.0;
+      } else if (digitLen >= 5) {
+        rate = 2.6;
+        if (speedMs >= 800) rate = 2.2;
+        if (speedMs >= 1500) rate = 1.8;
+      } else if (digitLen >= 4) {
+        rate = 2.4;
+        if (speedMs >= 800) rate = 2.0;
+        if (speedMs >= 1500) rate = 1.6;
+      } else if (digitLen >= 3) {
+        rate = 2.2;
+        if (speedMs >= 800) rate = 1.8;
+        if (speedMs >= 1500) rate = 1.4;
+      } else if (digitLen >= 2) {
+        rate = 1.8;
+        if (speedMs >= 800) rate = 1.4;
+        if (speedMs >= 1500) rate = 1.1;
+      }
+      utterance.rate = forceRate !== null ? forceRate : rate;
+    } else {
+      utterance.rate = forceRate !== null ? forceRate : 1.0;
     }
-    utterance.rate = forceRate !== null ? forceRate : rate;
+
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
-    utterance.lang = "en-US";
-    const bestVoice = getBestVoice("en");
-    if (bestVoice) utterance.voice = bestVoice;
+
+    if (!isMounted.current) return;
     window.speechSynthesis.speak(utterance);
   };
 
@@ -267,7 +308,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     const digitPart = absStr.length === 1 ? absStr : absStr.split("").join(" ");
     const text = `${sign} ${digitPart}`;
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = speed <= 0.5 ? 1.2 : speed <= 1.0 ? 1.0 : 0.9;
+    utterance.rate = speedMs <= 500 ? 1.2 : speedMs <= 1000 ? 1.0 : 0.9;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
     utterance.lang = "en-US";
@@ -327,12 +368,16 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
        setActualAnswer(ans);
     }
 
-    // Ready sequence with sound
+    // Ready sequence with sound — tagged with a seq-id (bumped by clearTimers
+    // above) so any stale callback from a prior sequence is rejected and
+    // cannot collapse the overlay early.
+    const mySeqId = readySeqIdRef.current;
     const seq = ["Get", "Ready", "3", "2", "1", "Go!"];
     let i = 0;
 
     const runSeq = () => {
         if (!isMounted.current) return;
+        if (mySeqId !== readySeqIdRef.current) return; // stale — superseded
 
         const text = seq[i];
         const isWord = text.length > 1;
@@ -343,15 +388,28 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
         if (i < seq.length - 1) {
             const id = setTimeout(() => {
+                if (mySeqId !== readySeqIdRef.current) return;
                 i++;
                 runSeq();
             }, delays[i]);
             timeoutsRef.current.push(id);
         } else {
+            // On the final "Go!" frame, pre-warm the speech engine so the very
+            // first dictation doesn't pay cold-start latency and get cut off.
+            if (ttsEnabled) {
+              try {
+                const warm = new SpeechSynthesisUtterance(" ");
+                warm.volume = 0.01;
+                warm.rate = 1.0;
+                window.speechSynthesis.speak(warm);
+              } catch (e) { /* ignore */ }
+            }
             const id = setTimeout(() => {
+                if (mySeqId !== readySeqIdRef.current) return;
                 setReadyText("");
                 // Brief pause before starting flash
                 const pauseId = setTimeout(() => {
+                    if (mySeqId !== readySeqIdRef.current) return;
                     startFlashing(targetIndex);
                 }, 500);
                 timeoutsRef.current.push(pauseId);
@@ -369,8 +427,8 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
   const startFlashing = (forcedIndex) => {
     if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     const nps = Math.max(1, Math.min(numbersPerSet, 20));
-    const speedNum = typeof speed === "number" ? speed : parseFloat(speed) || 0.8;
-    const isUltraFast = speedNum <= 0.4;
+    const speedNum = parseInt(speedMs, 10) || 300;
+    const isUltraFast = speedNum < 500;
     setPhase("playing");
     if (!gameSetsRef.current[forcedIndex]) return;
     let idx = 0;
@@ -389,7 +447,12 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
       if (!isMounted.current) return;
       if (idx >= nps) return;
       const num = gameSetsRef.current[forcedIndex][idx];
-      const prefire = isUltraFast ? 0 : getPrefire(num);
+      // Give the FIRST number extra prefire — even with the ready-overlay
+      // warm-up, the very first utterance of a round still pays some
+      // engine latency on most browsers and would otherwise start late
+      // and get cut off.
+      const basePrefire = isUltraFast ? 0 : getPrefire(num);
+      const prefire = isUltraFast ? 0 : (idx === 0 ? basePrefire + 250 : basePrefire);
 
       // Speak early so dictation leads the visual flash (skip at ultra-fast)
       if (!isUltraFast) speakFlash(num);
@@ -399,7 +462,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         setCurrentNumberIndex(idx);
         playFastTick();
 
-        let finalDelay = speedNum * 1000;
+        let finalDelay = speedNum;
         if (!isUltraFast) {
           const digitCount = Math.abs(num).toString().length;
           let delayMultiplier = 1.5;
@@ -413,11 +476,16 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         finalDelay = Math.max(4, finalDelay);
 
         if (idx === nps - 1) {
+          // Last number: extend dwell so its dictation finishes before
+          // speakText("equals") fires its cancel(). Mirrors the first-number
+          // prefire boost — the head and tail of a round are the spots
+          // most prone to being cut off.
+          const lastDelay = isUltraFast ? finalDelay : finalDelay + 250;
           flashTimerRef.current = setTimeout(() => {
             if (!isMounted.current) return;
             if (!isUltraFast) speakText("equals");
             setPhase("input");
-          }, finalDelay);
+          }, lastDelay);
         } else {
           flashTimerRef.current = setTimeout(() => { idx++; showAndSpeak(); }, finalDelay);
         }
@@ -650,8 +718,21 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
     });
   };
 
+  const stopAllAudio = () => {
+    // Cut off any in-flight sound effects (ready/ding/wrong) and queued speech
+    try {
+      Object.values(audioRefs.current).forEach(audio => {
+        if (!audio) return;
+        audio.pause();
+        audio.currentTime = 0;
+      });
+    } catch (e) { /* ignore */ }
+    try { window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+  };
+
   const handleBackToSettings = () => {
     clearTimers();
+    stopAllAudio();
     setPhase("settings");
     setActualAnswer(null);
     setCurrentNumberIndex(0);
@@ -679,7 +760,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
   const goToMainMenu = () => {
     clearTimers();
-    window.speechSynthesis.cancel();
+    stopAllAudio();
     // If in settings, go back to homepage; otherwise go to settings
     // Don't exit fullscreen when navigating - user can manually exit if needed
     if (phase === "settings") {
@@ -737,14 +818,16 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       <LoadingCurtain visible={isLoading} message="Shuffling the Cards!" messageTH="กำลังสับไพ่..." />
 
-      {/* Brand Logos Background */}
-      <div className="absolute inset-x-0 top-3 flex justify-center pointer-events-none overflow-hidden z-0">
-        <img
-          src={logosBackground}
-          alt=""
-          className="w-[280px] max-w-[320px] h-auto object-contain filter grayscale-[20%] contrast-125"
-        />
-      </div>
+      {/* Brand Logos Background - Floating for gameplay/results */}
+      {phase !== "settings" && (
+        <div className="absolute inset-x-0 top-3 flex justify-center pointer-events-none overflow-hidden z-0">
+          <img
+            src={logosBackground}
+            alt=""
+            className="w-[280px] max-w-[320px] h-auto object-contain filter grayscale-[20%] contrast-125"
+          />
+        </div>
+      )}
 
       {/* Back Button - Always Visible */}
       <button
@@ -752,7 +835,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         className="fixed top-3 left-3 sm:top-5 sm:left-5 z-[999] w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/90 backdrop-blur-md border border-white/70 shadow-[0_12px_30px_rgba(0,0,0,0.18)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
         aria-label="Back"
       >
-        <span className="text-2xl sm:text-3xl font-black text-slate-900">←</span>
+        <span className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">←</span>
       </button>
 
       {/* Fullscreen Toggle Button - Top Right */}
@@ -761,7 +844,7 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[999] w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/90 backdrop-blur-md border border-white/70 shadow-[0_12px_30px_rgba(0,0,0,0.18)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
         aria-label="Fullscreen"
       >
-        <span className="text-xl sm:text-2xl">⛶</span>
+        <span className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">⛶</span>
       </button>
 
       {/* Title / Round Indicator - MOVED TO BOTTOM */}
@@ -775,10 +858,19 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
 
       {/* --- PHASE: SETTINGS --- */}
       {phase === "settings" && (
-        <div className="flex-1 w-full flex flex-col items-center justify-center px-4 pt-16 pb-4 overflow-y-auto">
+        <div className="flex-1 w-full flex flex-col items-center justify-start px-4 pt-6 pb-4 overflow-y-auto">
+
+          {/* Logo specific to Settings (Fixed position, pushes content down) */}
+          <div className="flex justify-center pointer-events-none mb-4 shrink-0">
+            <img
+              src={logosBackground}
+              alt="Soroban School"
+              className="w-[200px] sm:w-[240px] h-auto object-contain filter grayscale-[20%] contrast-125 drop-shadow-sm"
+            />
+          </div>
 
           {/* Title */}
-          <div className="mb-6 mt-16 text-center">
+          <div className="mb-4 text-center shrink-0">
             <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg tracking-tight">
               ⚡ FLASHCARD
             </h1>
@@ -787,44 +879,80 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-xl p-6 sm:p-8 rounded-[2.5rem] shadow-xl border border-white max-w-lg w-full flex flex-col gap-4">
+          <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-6 rounded-[2rem] shadow-xl border border-white max-w-lg w-full flex flex-col gap-2">
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
                 {/* Speed */}
                 <div className="bg-slate-50 p-3 rounded-2xl">
                    <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.speedSec}</label>
                    <div className="flex items-center justify-between">
-                      <button onClick={() => stepSpeed(-1)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">−</button>
+                      <button 
+                        onMouseDown={() => startHolding(stepSpeed, -1)}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onTouchStart={(e) => { e.preventDefault(); startHolding(stepSpeed, -1); }}
+                        onTouchEnd={stopHolding}
+                        className="w-10 h-10 rounded-lg bg-white text-violet-600 font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center text-xl"
+                      >
+                        −
+                      </button>
                       <input
                         type="number"
-                        min="0.01"
-                        max="10"
-                        step="0.01"
-                        value={speed}
+                        min="5"
+                        max="10000"
+                        step="5"
+                        value={speedMs}
                         onChange={(e) => {
                           const v = e.target.value;
-                          if (v === "") { setSpeed(""); return; }
-                          const n = parseFloat(v);
-                          if (!isNaN(n)) setSpeed(n);
+                          if (v === "") { setSpeedMs(""); return; }
+                          const n = parseInt(v, 10);
+                          if (!isNaN(n)) setSpeedMs(n);
                         }}
                         onBlur={(e) => {
-                          const n = parseFloat(e.target.value);
-                          if (isNaN(n) || n < 0.01) setSpeed(0.01);
-                          else if (n > 10) setSpeed(10);
-                          else setSpeed(Math.round(n * 100) / 100);
+                          const n = parseInt(e.target.value, 10);
+                          if (isNaN(n) || n < 5) setSpeedMs(5);
+                          else if (n > 10000) setSpeedMs(10000);
+                          else setSpeedMs(n);
                         }}
                         className="text-2xl font-black text-slate-800 w-20 text-center bg-transparent border-b-2 border-slate-200 outline-none focus:border-violet-500 transition-colors"
                       />
-                      <button onClick={() => stepSpeed(1)} className="w-8 h-8 rounded-lg bg-white text-violet-600 font-bold shadow-sm">+</button>
+                      <button 
+                        onMouseDown={() => startHolding(stepSpeed, 1)}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onTouchStart={(e) => { e.preventDefault(); startHolding(stepSpeed, 1); }}
+                        onTouchEnd={stopHolding}
+                        className="w-10 h-10 rounded-lg bg-white text-violet-600 font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center text-xl"
+                      >
+                        +
+                      </button>
                    </div>
                 </div>
                 {/* Rounds */}
                 <div className="bg-slate-50 p-3 rounded-2xl">
                    <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.rounds}</label>
                    <div className="flex items-center justify-between">
-                      <button onClick={() => setTotalRounds(Math.max(1, totalRounds - 1))} className="w-8 h-8 rounded-lg bg-white text-emerald-600 font-bold shadow-sm">−</button>
+                      <button 
+                        onMouseDown={() => startHolding((d) => setTotalRounds(prev => Math.max(1, prev + d)), -1)}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onTouchStart={(e) => { e.preventDefault(); startHolding((d) => setTotalRounds(prev => Math.max(1, prev + d)), -1); }}
+                        onTouchEnd={stopHolding}
+                        className="w-10 h-10 rounded-lg bg-white text-emerald-600 font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center text-xl"
+                      >
+                        −
+                      </button>
                       <span className="text-2xl font-black text-slate-800">{totalRounds}</span>
-                      <button onClick={() => setTotalRounds(Math.min(50, totalRounds + 1))} className="w-8 h-8 rounded-lg bg-white text-emerald-600 font-bold shadow-sm">+</button>
+                      <button 
+                        onMouseDown={() => startHolding((d) => setTotalRounds(prev => Math.min(50, prev + d)), 1)}
+                        onMouseUp={stopHolding}
+                        onMouseLeave={stopHolding}
+                        onTouchStart={(e) => { e.preventDefault(); startHolding((d) => setTotalRounds(prev => Math.min(50, prev + d)), 1); }}
+                        onTouchEnd={stopHolding}
+                        className="w-10 h-10 rounded-lg bg-white text-emerald-600 font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center text-xl"
+                      >
+                        +
+                      </button>
                    </div>
                 </div>
             </div>
@@ -833,25 +961,54 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
             <div className="bg-slate-50 p-3 rounded-2xl">
                <label className="text-slate-400 font-bold text-xs uppercase ml-1 block mb-1">{t.numbersPerSet}</label>
                <div className="flex items-center justify-between px-4">
-                  <button onClick={() => setNumbersPerSet(Math.max(1, numbersPerSet - 1))} className="w-10 h-10 rounded-xl bg-white text-emerald-600 font-bold shadow-sm text-xl active:scale-90 transition-all">−</button>
-                  <span className="text-3xl font-black text-slate-800">{numbersPerSet}</span>
-                  <button onClick={() => setNumbersPerSet(Math.min(20, numbersPerSet + 1))} className="w-10 h-10 rounded-xl bg-white text-emerald-600 font-bold shadow-sm text-xl active:scale-90 transition-all">+</button>
+                  <button 
+                    onMouseDown={() => startHolding((d) => setNumbersPerSet(prev => Math.max(1, prev + d)), -1)}
+                    onMouseUp={stopHolding}
+                    onMouseLeave={stopHolding}
+                    onTouchStart={(e) => { e.preventDefault(); startHolding((d) => setNumbersPerSet(prev => Math.max(1, prev + d)), -1); }}
+                    onTouchEnd={stopHolding}
+                    className="w-12 h-12 rounded-xl bg-white text-emerald-600 font-bold shadow-sm text-2xl active:scale-90 transition-all flex items-center justify-center"
+                  >
+                    −
+                  </button>
+                  <span className="text-4xl font-black text-slate-800">{numbersPerSet}</span>
+                  <button 
+                    onMouseDown={() => startHolding((d) => setNumbersPerSet(prev => Math.min(20, prev + d)), 1)}
+                    onMouseUp={stopHolding}
+                    onMouseLeave={stopHolding}
+                    onTouchStart={(e) => { e.preventDefault(); startHolding((d) => setNumbersPerSet(prev => Math.min(20, prev + d)), 1); }}
+                    onTouchEnd={stopHolding}
+                    className="w-12 h-12 rounded-xl bg-white text-emerald-600 font-bold shadow-sm text-2xl active:scale-90 transition-all flex items-center justify-center"
+                  >
+                    +
+                  </button>
                </div>
             </div>
 
             {/* Mode & TTS */}
-            <div className="flex gap-3">
-               <div className="flex-1 bg-slate-50 p-3 rounded-2xl flex flex-col gap-2">
-                  <label className="text-slate-400 font-bold text-xs uppercase ml-1">{t.mode}</label>
-                  <button onClick={() => setRevealMode(revealMode === 'each' ? 'end' : 'each')} className="flex-1 bg-white rounded-xl font-bold text-emerald-700 shadow-sm py-2 text-sm border-2 border-emerald-100">
-                      {revealMode === 'each' ? t.modePractice : t.modeCompetition}
+            <div className="flex gap-2">
+               {/* Mode Selection */}
+               <div className="flex-[2] bg-slate-50 p-2.5 rounded-2xl flex flex-col gap-1">
+                  <label className="text-slate-400 font-bold text-[10px] uppercase ml-1">{t.mode}</label>
+                  <button 
+                    onClick={() => setRevealMode(revealMode === 'each' ? 'end' : 'each')} 
+                    className="w-full bg-white rounded-xl font-black text-emerald-700 shadow-sm py-4 px-3 text-lg border-2 border-emerald-100 flex items-center justify-center gap-3 hover:bg-emerald-50 active:scale-95 transition-all h-full"
+                  >
+                      <span className="text-3xl">{revealMode === 'each' ? '📝' : '🏆'}</span>
+                      <span className="text-center leading-tight">{revealMode === 'each' ? t.modePractice : t.modeCompetition}</span>
                   </button>
                </div>
-               <div className="w-1/3 bg-slate-50 p-3 rounded-2xl flex flex-col gap-2">
-                  <label className="text-slate-400 font-bold text-xs uppercase ml-1">{t.voice}</label>
-                  <button onClick={() => setTtsEnabled(!ttsEnabled)} className={`flex-1 rounded-xl font-bold shadow-sm py-2 text-xl ${ttsEnabled ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-400'}`}>
-                      {ttsEnabled ? '🔊' : '🔇'}
-                  </button>
+               {/* Voice Settings */}
+               <div className="flex-1 bg-slate-50 p-2.5 rounded-2xl flex flex-col gap-1.5">
+                  <label className="text-slate-400 font-bold text-[10px] uppercase ml-1">{t.voice}</label>
+                  <div className="flex flex-col gap-1.5 h-full">
+                    <button onClick={() => setTtsEnabled(!ttsEnabled)} className={`flex-1 rounded-xl font-bold shadow-sm py-1.5 text-xl transition-colors ${ttsEnabled ? 'bg-green-100 text-green-600 border-2 border-green-200' : 'bg-slate-200 text-slate-400 border-2 border-slate-300'}`}>
+                        {ttsEnabled ? '🔊' : '🔇'}
+                    </button>
+                    <button onClick={toggleLang} className="flex-1 rounded-xl font-black shadow-sm py-1.5 text-base bg-white text-violet-600 border-2 border-violet-100 uppercase tracking-wider hover:bg-violet-50">
+                        {lang === 'en' ? 'EN' : 'TH'}
+                    </button>
+                  </div>
                </div>
             </div>
 
@@ -912,13 +1069,13 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
                                       </div>
                                     )}
                                 </div>
-                                <div className="text-2xl sm:text-3xl font-black w-24 text-right shrink-0">
+                                <div className="flex items-center justify-end flex-1 min-w-[120px] sm:min-w-[180px]">
                                     {isRevealed ? (
-                                        <span className="text-emerald-500 animate-pop-in inline-block">
+                                        <span className="text-6xl sm:text-8xl font-black text-emerald-500 animate-result-huge drop-shadow-[0_10px_25px_rgba(16,185,129,0.45)] leading-none py-2">
                                             {item.correctAnswer}
                                         </span>
                                     ) : (
-                                        <span className="text-slate-200">...</span>
+                                        <span className="text-3xl font-black text-slate-200">...</span>
                                     )}
                                 </div>
                             </div>
@@ -1059,6 +1216,27 @@ const FlashcardGame = forwardRef(function FlashcardGame(props, ref) {
         }
         .animate-pop-in {
           animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes hugePopIn {
+          0% { transform: scale(0); opacity: 0; filter: blur(8px); }
+          65% { transform: scale(1.2); opacity: 1; filter: blur(0); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-huge-pop {
+          animation: hugePopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes resultHugeEntrance {
+          0% { transform: scale(0); opacity: 0; filter: blur(12px); }
+          50% { transform: scale(1.4); opacity: 1; filter: blur(0); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes resultHugePulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+        .animate-result-huge {
+          animation: resultHugeEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, 
+                     resultHugePulse 2s ease-in-out 0.6s infinite;
         }
         /* Feedback container - all elements animate together */
         .feedback-container {

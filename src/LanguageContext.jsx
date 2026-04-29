@@ -69,7 +69,7 @@ export const translations = {
     gameSetup: "GAME SETUP",
     winningDate: "Winning Date",
     // Flashcard Game
-    speedSec: "Speed (sec)",
+    speedSec: "Speed (ms)",
     numbersPerSet: "Numbers/Set",
     rounds: "Rounds",
     mode: "Mode",
@@ -151,7 +151,7 @@ export const translations = {
     gameSetup: "ตั้งค่าเกม",
     winningDate: "วันที่ชนะ",
     // Flashcard Game
-    speedSec: "ความเร็ว (วิ)",
+    speedSec: "ความเร็ว (ms)",
     numbersPerSet: "ตัวเลข/ชุด",
     rounds: "จำนวนรอบ",
     mode: "โหมด",
